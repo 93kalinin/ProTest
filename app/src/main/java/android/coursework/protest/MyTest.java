@@ -1,0 +1,109 @@
+package android.coursework.protest;
+
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Данные о тесте. Каждый экземпляр имеет уникальное неизменяемое сочетание ID и списка вопросов.
+ * Это позволяет исключить нарушение соответствия между идентификатором и набором вопросов теста.
+ */
+public class MyTest {
+
+    public static final Pattern idRegex = Pattern.compile("\\w{4}");
+
+    public static class Builder {
+
+        private LinkedHashSet<Question> questions;
+        private String id;
+        private boolean isPrivate;
+        private String title;
+        private String description;
+        private HashSet<String> tags;
+
+        public Builder(LinkedHashSet<Question> questions, String id) {
+            Matcher matcher = idRegex.matcher(id);
+            int questionsNumber = questions.size();
+
+            if(!matcher.matches())
+                throw new IllegalArgumentException("Invalid ID");
+            if(questionsNumber < 2)
+                throw new IllegalArgumentException("Too few questions");
+            if (questionsNumber > 128)
+                throw new IllegalArgumentException("Too many questions");
+            this.questions = questions;
+            this.id = id;
+        }
+
+        public Builder makePrivate() {
+            this.isPrivate = true;
+            return this;
+        }
+
+        public Builder setTitle(String title) {
+            if (title.length() < 3)
+                throw new IllegalArgumentException("The title is too short");
+            this.title = title;
+            return this;
+        }
+
+        public Builder setDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder setTags(HashSet<String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        public MyTest build() {
+            MyTest test = new MyTest(questions, id, isPrivate);
+            test.title = title;
+            test.description = description;
+            test.tags = tags;
+            test.creationTime = Calendar.getInstance().getTime();
+            return test;
+        }
+    }
+
+    private final LinkedHashSet<Question> questions;
+    public final String id;
+    public final boolean isPrivate;
+    private String title;
+    private String description;
+    private HashSet<String> tags;
+    private Date creationTime;
+
+    private MyTest(LinkedHashSet<Question> questions, String id, boolean isPrivate) {
+        this.questions = questions;
+        this.id = id;
+        this.isPrivate = isPrivate;
+    }
+
+    public Collection<Question> getQuestions() {
+        return Collections.unmodifiableCollection(questions);
+    }
+    public Collection<String> getTags() {
+        return Collections.unmodifiableCollection(tags);
+    }
+    public Date getCreationTime() {
+        return new Date(creationTime.getTime());
+    }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+
+    public void setTitle(String title) {
+        if (title.length() < 3)
+            throw new IllegalArgumentException("The title is too short");
+        this.title = title;
+    }
+    public void setDescription(String description) { this.description = description; }
+    public boolean addTag(String tag) { return tags.add(tag); }
+    public boolean removeTag(String tag) { return tags.remove(tag); }
+}

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ProTest</string>
+    <string name="title_activity_browse">Browse</string>
 </resources>
