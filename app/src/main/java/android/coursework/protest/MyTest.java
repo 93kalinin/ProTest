@@ -12,12 +12,13 @@ import java.util.regex.Pattern;
 /**
  * Данные о тесте. Каждый экземпляр имеет уникальное неизменяемое сочетание ID и списка вопросов.
  * Это позволяет исключить нарушение соответствия между идентификатором и набором вопросов теста.
+ * Таким образом, зная ID, всегда можно найти точно тот же самый тест, если он не был удален.
  */
 public class MyTest {
 
     public static final Pattern idRegex = Pattern.compile("\\w{4}");
 
-    public static class Builder {
+    public static final class Builder {
 
         private LinkedHashSet<Question> questions;
         private String id;
@@ -25,6 +26,7 @@ public class MyTest {
         private String title;
         private String description;
         private HashSet<String> tags;
+        private String author;
 
         public Builder(LinkedHashSet<Question> questions, String id) {
             Matcher matcher = idRegex.matcher(id);
@@ -62,12 +64,18 @@ public class MyTest {
             return this;
         }
 
+        public Builder setAuthor(String uid) {
+            this.author = uid;
+            return this;
+        }
+
         public MyTest build() {
             MyTest test = new MyTest(questions, id, isPrivate);
             test.title = title;
             test.description = description;
             test.tags = tags;
             test.creationTime = Calendar.getInstance().getTime();
+            test.author = author;
             return test;
         }
     }
@@ -79,11 +87,26 @@ public class MyTest {
     private String description;
     private HashSet<String> tags;
     private Date creationTime;
+    private String author;
 
     private MyTest(LinkedHashSet<Question> questions, String id, boolean isPrivate) {
         this.questions = questions;
         this.id = id;
         this.isPrivate = isPrivate;
+    }
+
+    @Override
+    public int hashCode() { return questions.hashCode(); }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this)
+            return true;
+        if (!(other instanceof MyTest))
+            return false;
+        MyTest that = (MyTest)other;
+        return id.equals(that.id)
+                && questions.equals(that.questions);
     }
 
     public Collection<Question> getQuestions() {
@@ -97,6 +120,7 @@ public class MyTest {
     }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
+    public String getAuthor() { return author; }
 
     public void setTitle(String title) {
         if (title.length() < 3)
