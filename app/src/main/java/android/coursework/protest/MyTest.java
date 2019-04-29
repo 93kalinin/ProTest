@@ -13,8 +13,9 @@ import java.util.regex.Pattern;
  * Данные о тесте. Каждый экземпляр имеет уникальное неизменяемое сочетание ID и списка вопросов.
  * Это позволяет исключить нарушение соответствия между идентификатором и набором вопросов теста.
  * Таким образом, зная ID, всегда можно найти точно тот же самый тест, если он не был удален.
+ * Название, описание и теги могут изменяться.
  */
-public class MyTest {
+public final class MyTest {
 
     public static final Pattern idRegex = Pattern.compile("\\w{4}");
 
@@ -28,7 +29,8 @@ public class MyTest {
         private HashSet<String> tags;
         private String author;
 
-        public Builder(LinkedHashSet<Question> questions, String id) {
+        public Builder(LinkedHashSet<Question> questions, String id)
+        throws IllegalArgumentException {
             Matcher matcher = idRegex.matcher(id);
             int questionsNumber = questions.size();
 
@@ -47,7 +49,7 @@ public class MyTest {
             return this;
         }
 
-        public Builder setTitle(String title) {
+        public Builder setTitle(String title) throws IllegalArgumentException {
             if (title.length() < 3)
                 throw new IllegalArgumentException("The title is too short");
             this.title = title;
@@ -69,7 +71,12 @@ public class MyTest {
             return this;
         }
 
-        public MyTest build() {
+        public MyTest build() throws IllegalStateException {
+            if (this.title.equals(""))
+                throw new IllegalStateException("Title is not set");
+            if (this.author.equals(""))
+                throw new IllegalStateException("Author is not set");
+
             MyTest test = new MyTest(questions, id, isPrivate);
             test.title = title;
             test.description = description;
@@ -122,7 +129,7 @@ public class MyTest {
     public String getDescription() { return description; }
     public String getAuthor() { return author; }
 
-    public void setTitle(String title) {
+    public void setTitle(String title) throws IllegalArgumentException {
         if (title.length() < 3)
             throw new IllegalArgumentException("The title is too short");
         this.title = title;
