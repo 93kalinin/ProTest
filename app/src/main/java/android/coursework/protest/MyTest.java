@@ -1,20 +1,19 @@
 package android.coursework.protest;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
 /**
  * Содержит данные о тесте. Используется для создания, прохождения и хранения тестов в БД.
- * Является иммутабельным, т.к. не предполагается, что тесты после создания будут часто изменяться.
- * Получение последовательности вопросов, представленных классом Question и содержащихся в поле
- * questions, предполагается с помощью итератора.
- * Полностью перекладывает проверку валидности аргументов конструктора на класс, оперирующий
- * экземплярами MyTest.
+ * Иммутабелен. Возвращает последовательность вопросов Question через итератор.
+ * Полностью перекладывает проверку валидности аргументов конструктора на внешний код.
  */
 final class MyTest implements Iterable<Question> {
 
-    private final Question[] questions;
+    private final ArrayList<Question> questions;
     private final Date creationTime;
     public final String id;
     public final boolean isPrivate;
@@ -23,7 +22,7 @@ final class MyTest implements Iterable<Question> {
     public final String tags;
     public final String author;
 
-    public MyTest(Question[] questions, String id, boolean isPrivate, String title,
+    public MyTest(ArrayList<Question> questions, String id, boolean isPrivate, String title,
             String description, String tags, String author) {
         this.questions = questions;
         this.id = id;
@@ -36,13 +35,9 @@ final class MyTest implements Iterable<Question> {
     }
 
     public Date getCreationTime() { return new Date(creationTime.getTime()); }
+    public int getNumberOfQuestions() { return questions.size(); }
 
     @Override
-    public Iterator<Question> iterator() { return new QuestionsIterator(); }
-
-    private class QuestionsIterator implements Iterator<Question> {
-        private int position = 0;
-        public boolean hasNext() { return  position < questions.length; }
-        public Question next() { return this.hasNext() ? questions[position++] : null; }
-    }
+    public Iterator<Question> iterator()
+        { return Collections.unmodifiableList(questions).iterator(); }
 }
