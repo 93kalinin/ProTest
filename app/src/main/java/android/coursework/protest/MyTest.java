@@ -35,7 +35,7 @@ final class MyTest implements Iterable<Question> {
     }
 
     public Date getCreationTime() { return new Date(creationTime.getTime()); }
-    public int getNumberOfQuestions() { return questions.size(); }
+    public int getNumberOfQuestions() { return questions.size(); } //TODO:точно нужен?
 
     @Override
     public Iterator<Question> iterator()

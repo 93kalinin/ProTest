@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">ProTest</string>
     <string name="title_activity_browse">Browse</string>
+    <string name="email_field_description">Адрес электронной почты</string>
+    <string name="name_field_description">Имя или псевдоним</string>
+    <string name="password_input_description">Пароль</string>
+    <string name="pick_role">Выберите роль</string>
+    <string name="testee">тестируемый</string>
+    <string name="tester">тестировщик</string>
+    <string name="moderator">модератор</string>
+    <string name="register">зарегистрироваться</string>
+    <string name="sign_in">войти</string>
+    <string name="sign_in_button">вход</string>
+    <string name="sign_up_button">регистрация</string>
 </resources>

@@ -49,7 +49,6 @@ public class TestFeeder extends RecyclerView.Adapter<TestFeeder.TestViewHolder> 
     public void onBindViewHolder(TestViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.title.setText(tests[position].getTitle());
 
     }
 
