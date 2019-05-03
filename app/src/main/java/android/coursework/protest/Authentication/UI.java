@@ -3,6 +3,7 @@ package android.coursework.protest.Authentication;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.coursework.protest.R;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
@@ -13,13 +14,15 @@ import android.view.View;
  */
 final class UI {
 
-    private final View signupView, signinView, welcomeView;
+    private final View rootLayout, signupView, signinView, welcomeView, loadingView;
     private final int averageAnimationDuration;
 
     UI(AppCompatActivity activity) {
+        rootLayout = activity.findViewById(R.id.root_layout);
         signupView = activity.findViewById(R.id.layout_signup);
         signinView = activity.findViewById(R.id.layout_signin);
         welcomeView = activity.findViewById(R.id.layout_welcome);
+        loadingView = activity.findViewById(R.id.loading_spinner);
         averageAnimationDuration = activity.getResources()
                 .getInteger(android.R.integer.config_mediumAnimTime);
         hideSecondaryViews();
@@ -30,14 +33,18 @@ final class UI {
         signinView.setVisibility(View.GONE);
     }
 
-    void animateForSignup() {
+    void goToSignup() {
         hideView(welcomeView);
         showView(signupView);
     }
 
-    void animateForSignin() {
+    void goToSignin() {
         hideView(welcomeView);
         showView(signinView);
+    }
+
+    void showLoadingSpinner() {
+        showView(loadingView);
     }
 
     private void showView(View view) {
@@ -58,5 +65,10 @@ final class UI {
                         view.setVisibility(View.GONE);
                     }
                 });
+    }
+
+    void showSnackbar(String message) {
+        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
+                .show();
     }
 }
