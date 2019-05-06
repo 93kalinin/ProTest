@@ -1,5 +1,6 @@
 package android.coursework.protest;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -13,22 +14,25 @@ import java.util.Iterator;
  * содержит число выбранных тестируемым верных вариантов, достаточное для полного ответа.
  * Например, из 8 вариантов 4 верные, но можно выбрать 3 или 4 из верных 4 для полного ответа.
  */
-final class Question implements Iterable<Question.Answer> {
+public final class Question implements Iterable<Question.Answer>, Serializable {
 
-    static final class Answer {
+    public static final class Answer implements Serializable {
 
-        public final boolean isCorrect;
+        private boolean isCorrect;
         public final String answer;
 
-        Answer(String answer, boolean isCorrect) {
+        public Answer(String answer, boolean isCorrect) {
             this.answer = answer;
             this.isCorrect = isCorrect;
         }
+
+        public void toggle() { isCorrect = !isCorrect; }
+        public boolean isCorrect() { return isCorrect; }
     }
 
     private final ArrayList<Answer> answers;
-    public final String question;
-    public final int sufficient;
+    final String question;
+    final int sufficient;
 
     Question(String question, ArrayList<Answer> answers, int sufficient) {
         this.question = question;

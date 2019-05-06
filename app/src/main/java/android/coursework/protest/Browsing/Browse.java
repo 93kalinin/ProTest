@@ -1,5 +1,6 @@
-package android.coursework.protest;
+package android.coursework.protest.Browsing;
 
+import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -32,7 +33,7 @@ public class Browse extends AppCompatActivity {
             }
         });
 
-        recyclerView = findViewById(R.id.test_browser);
+        /*recyclerView = findViewById(R.id.test_browser);*/
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 

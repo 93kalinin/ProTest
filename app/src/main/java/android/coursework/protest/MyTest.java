@@ -1,5 +1,6 @@
 package android.coursework.protest;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -11,31 +12,32 @@ import java.util.Iterator;
  * Иммутабелен. Возвращает последовательность вопросов Question через итератор.
  * Полностью перекладывает проверку валидности аргументов конструктора на внешний код.
  */
-final class MyTest implements Iterable<Question> {
+public final class MyTest implements Iterable<Question>, Serializable {
 
     private final ArrayList<Question> questions;
     private final Date creationTime;
     public final String id;
-    public final boolean isPrivate;
-    public final String title;
-    public final String description;
-    public final String tags;
-    public final String author;
+    final boolean isPrivate;
+    final String title;
+    final String description;
+    final String tags;
+    final String authorNickname;
+    final String authorId;
 
     public MyTest(ArrayList<Question> questions, String id, boolean isPrivate, String title,
-            String description, String tags, String author) {
+            String description, String tags, String author, String authorId) {
         this.questions = questions;
         this.id = id;
         this.isPrivate = isPrivate;
         this.title = title;
         this.description = description;
         this.tags = tags;
-        this.author = author;
+        this.authorNickname = author;
+        this.authorId = authorId;
         this.creationTime = Calendar.getInstance().getTime();
     }
 
     public Date getCreationTime() { return new Date(creationTime.getTime()); }
-    public int getNumberOfQuestions() { return questions.size(); } //TODO:точно нужен?
 
     @Override
     public Iterator<Question> iterator()

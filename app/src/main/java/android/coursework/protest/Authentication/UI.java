@@ -10,7 +10,7 @@ import android.view.View;
 /**
  * Отвечает за анимации на экране регистрации/входа.
  * Должен быть синглтоном, но не работает корректно если реализован как синглтон
- * (баг или особенность работы с памятью Android). Иммутабелен.
+ * (баг или особенность работы с памятью Android).
  */
 final class UI {
 
@@ -22,15 +22,10 @@ final class UI {
         signupView = activity.findViewById(R.id.layout_signup);
         signinView = activity.findViewById(R.id.layout_signin);
         welcomeView = activity.findViewById(R.id.layout_welcome);
-        loadingView = activity.findViewById(R.id.loading_spinner);
+        loadingView = activity.findViewById(R.id.loading_layout);
         averageAnimationDuration = activity.getResources()
                 .getInteger(android.R.integer.config_mediumAnimTime);
-        hideSecondaryViews();
-    }
-
-    private void hideSecondaryViews() {
-        signupView.setVisibility(View.GONE);
-        signinView.setVisibility(View.GONE);
+        initializeLayout();
     }
 
     void goToSignup() {
@@ -44,7 +39,16 @@ final class UI {
     }
 
     void showLoadingSpinner() {
-        showView(loadingView);
+       signupView.setVisibility(View.GONE);
+       signinView.setVisibility(View.GONE);
+       loadingView.setVisibility(View.VISIBLE);
+    }
+
+    private void initializeLayout() {
+        signupView.setVisibility(View.GONE);
+        signinView.setVisibility(View.GONE);
+        loadingView.setVisibility(View.GONE);
+        welcomeView.setVisibility(View.VISIBLE);
     }
 
     private void showView(View view) {

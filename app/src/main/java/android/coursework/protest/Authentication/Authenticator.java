@@ -1,7 +1,7 @@
 package android.coursework.protest.Authentication;
 
 import android.content.Intent;
-import android.coursework.protest.Browse;
+import android.coursework.protest.Creation.CreateQuestion;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -20,7 +20,6 @@ public class Authenticator extends AppCompatActivity {
     private Inputs inputs;
 
     private FirebaseAuth auth;
-    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,44 +28,52 @@ public class Authenticator extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         inputs = new Inputs(this);
         UI = new UI(this);
+        allowAccess(auth.getCurrentUser()); //для отладки!
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (auth.getCurrentUser() != null) {
-            startActivity(new Intent(this, Browse.class));
-            this.finish();
-        }
-    }
-
-    public void goToSignup(View view) { UI.goToSignup(); }
-    public void goToSignin(View view) { UI.goToSignin(); }
 
     public void signIn(View view) {
-        inputs.signinInputsOK();
-
+        if (!inputs.signinInputsOK()) {
+            UI.showSnackbar("В одно или несколько полей введены некорректные данные");
+            return;
         }
+        UI.showLoadingSpinner();
+        String email = inputs.getInput(inputs.signinEmailLayout);
+        String password = inputs.getInput(inputs.signinPasswordLayout);
+
+        auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, (task) -> {
+                    if (task.isSuccessful()) allowAccess(auth.getCurrentUser());
+                    else    //possible invalid state at this point
+                        UI.showSnackbar("Вход не удался");
+                });
+    }
 
     public void signUp(View view) {
         if (!inputs.signupInputsOK()) {
             UI.showSnackbar("В одно или несколько полей введены некорректные данные");
             return;
         }
-        /*
         UI.showLoadingSpinner();
         String email = inputs.getInput(inputs.signupEmailLayout);
         String password = inputs.getInput(inputs.signupPasswordLayout);
-        String nickname = inputs.getInput(inputs.signupNicknameLayout);
+        String nickname = inputs.getInput(inputs.signupNicknameLayout);    //need to attach it
 
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, (task) -> {
-                        if (task.isSuccessful()) user = auth.getCurrentUser();
-                        else {
-                            UI.showSnackbar("Регистрация не удалась");    //TODO:handle better
-                            return;
-                        }
+                        if (task.isSuccessful()) allowAccess(auth.getCurrentUser());
+                        else    //possible invalid state at this point
+                            UI.showSnackbar("Регистрация не удалась");
                 });
-        */
         }
+
+    private void allowAccess(FirebaseUser user) {
+        if (user == null) throw new SecurityException("no user is currently logged in");
+        Intent intent = new Intent(this, CreateQuestion.class);
+        intent.putExtra("user", user);
+        startActivity(intent);
+        this.finish();
+    }
+
+    public void goToSignup(View view) { UI.goToSignup(); }
+    public void goToSignin(View view) { UI.goToSignin(); }
 }

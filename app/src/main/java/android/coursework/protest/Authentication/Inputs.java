@@ -1,14 +1,10 @@
 package android.coursework.protest.Authentication;
 
 import android.coursework.protest.R;
-import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.widget.EditText;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -76,6 +72,5 @@ final class Inputs {
                 && nicknamePattern.matcher(nickname).matches();
     }
 
-    String getInput(TextInputLayout layout)
-        { return layout.getEditText().getText().toString(); }
+    String getInput(TextInputLayout layout) { return layout.getEditText().getText().toString(); }
 }
