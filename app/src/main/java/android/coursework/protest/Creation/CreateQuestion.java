@@ -1,43 +1,39 @@
 package android.coursework.protest.Creation;
 
-import android.content.Context;
 import android.content.Intent;
-import android.coursework.protest.Question;
 import android.coursework.protest.R;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.coursework.protest.Creation.Question.Answer;
+
+/**
+ * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers).
+ */
 public class CreateQuestion extends AppCompatActivity {
 
     public final int MIN_QUESTION_LENGTH = 5;
+    public final int MIN_ANSWER_LENGTH = 5;
     public final int MIN_ANSWERS_AMOUNT = 2;
 
+    private List<Answer> answers;
     private ConstraintLayout rootLayout;
     private TextInputEditText answerInput;
     private TextInputEditText questionInput;
     private RecyclerView recyclerView;
     private AnswersRecyclerAdapter adapter;
-    private List<Question.Answer> answers;
     private Intent activityResult;
 
     @Override
@@ -51,7 +47,8 @@ public class CreateQuestion extends AppCompatActivity {
         fab.setOnClickListener(view -> {
             extractAnswers();
             if (!inputsAreValid()) return;
-            activityResult.putExtra("answers", (Serializable) answers);
+            activityResult.putExtra("question",
+                    new Question(questionInput.getText().toString(), answers));
             setResult(RESULT_OK);
             finish();
                 });
@@ -65,19 +62,23 @@ public class CreateQuestion extends AppCompatActivity {
     }
 
     public void addAnswer(View view) {
-        adapter.addItem(answerInput.getText().toString());
+        String answer = answerInput.getText().toString();
+        if (answer.length() < MIN_ANSWER_LENGTH) {
+            error("Длина ответа должна быть хотя бы " + MIN_ANSWER_LENGTH + " символов");
+            return;
+        }
+        adapter.addItem(answer);
         answerInput.setText("");
     }
 
     private void setUpRecyclerView() {
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        ItemTouchHelper itemTouchHelper = new
-                ItemTouchHelper(new SwipeToDeleteAnswers(adapter));
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteAnswers(adapter));
         itemTouchHelper.attachToRecyclerView(recyclerView);
     }
 
-    private void extractAnswers() { answers = adapter.getAnswers(); }
+    private void extractAnswers() { answers = new ArrayList<>(adapter.getAnswers()); }
 
     private boolean inputsAreValid() {
         if (questionInput.getText().length() < MIN_QUESTION_LENGTH)
@@ -85,9 +86,8 @@ public class CreateQuestion extends AppCompatActivity {
         if (answers.size() < MIN_ANSWERS_AMOUNT)
             return error("Вариантов ответа должно быть по меньшей мере " + MIN_ANSWERS_AMOUNT);
 
-        //можно было бы заменить на answers.toStream().noneMatch(Answer::isCorrect). косяк Android
         boolean atLeastOneCorrect = false;
-        for (Question.Answer answer : answers)
+        for (Answer answer : answers)
             if (answer.isCorrect()) atLeastOneCorrect = true;
         if (!atLeastOneCorrect)
             return error("Хотя бы один из вариантов ответов должен быть верным");

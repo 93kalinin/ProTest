@@ -1,7 +1,6 @@
 package android.coursework.protest.Creation;
 
 import android.content.Intent;
-import android.coursework.protest.Question;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
@@ -25,9 +24,18 @@ public class CreateTest extends AppCompatActivity {
         setContentView(R.layout.create_test);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  requestCode == RESULT_OK) {
+            Question question = (Question) data.getExtras().getSerializable("question");
+            questions.add(question);
+        }
+    }
+
+
     public void addQuestion(View view) {
         Intent intent= new Intent(this, CreateQuestion.class);
-        if (questions.size() <= MAX_QUESTIONS_AMOUNT)
+        if (questions.size() < MAX_QUESTIONS_AMOUNT)
             startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
         else showSnackbar("Достигнуто предельно допустимое количество вопросов");
     }

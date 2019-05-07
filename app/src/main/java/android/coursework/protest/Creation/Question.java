@@ -1,18 +1,14 @@
-package android.coursework.protest;
+package android.coursework.protest.Creation;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Содержит данные о вопросе и ответах. Используется исключительно в связке с тестом MyTest.
  * Иммутабелен. Возвращает последовательность ответов Answer через итератор.
  * Полностью перекладывает проверку валидности аргументов конструктора на внешний код.
- *
- * Полный ответ на вопрос может требовать выбора нескольких верных вариантов. Question.sufficient
- * содержит число выбранных тестируемым верных вариантов, достаточное для полного ответа.
- * Например, из 8 вариантов 4 верные, но можно выбрать 3 или 4 из верных 4 для полного ответа.
  */
 public final class Question implements Iterable<Question.Answer>, Serializable {
 
@@ -30,14 +26,12 @@ public final class Question implements Iterable<Question.Answer>, Serializable {
         public boolean isCorrect() { return isCorrect; }
     }
 
-    private final ArrayList<Answer> answers;
+    private final List<Answer> answers;
     final String question;
-    final int sufficient;
 
-    Question(String question, ArrayList<Answer> answers, int sufficient) {
+    Question(String question, List<Answer> answers) {
         this.question = question;
         this.answers = answers;
-        this.sufficient = sufficient;
     }
 
     @Override

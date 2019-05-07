@@ -1,10 +1,11 @@
 package android.coursework.protest.Creation;
 
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
+/**
+ * Отвечает за возможность удаления добавленных вариантов ответа свайпом.
+ */
 class SwipeToDeleteAnswers extends ItemTouchHelper.SimpleCallback{
 
     private AnswersRecyclerAdapter adapter;
