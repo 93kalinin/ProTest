@@ -15,4 +15,5 @@
     <string name="test_name_input_hint">Название</string>
     <string name="test_description_input_hint">Описание</string>
     <string name="title_activity_create_question">CreateQuestion</string>
+    <string name="title_activity_create_test">CreateTest</string>
 </resources>

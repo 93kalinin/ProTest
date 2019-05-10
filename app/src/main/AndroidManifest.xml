@@ -9,10 +9,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
+            android:name=".Creation.CreateTest"
+            android:label="@string/title_activity_create_test"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
             android:name=".Creation.CreateQuestion"
             android:label="@string/title_activity_create_question"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".Authentication.Authenticator"
             android:screenOrientation="portrait"
