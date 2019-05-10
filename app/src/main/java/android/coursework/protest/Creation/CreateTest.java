@@ -14,8 +14,6 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.coursework.protest.R;
 
-import java.util.ArrayList;
-
 public class CreateTest extends AppCompatActivity {
 
     final int MIN_DESCRIPTION_LENGTH = 10;
@@ -35,7 +33,7 @@ public class CreateTest extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.finish_question_creation_fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

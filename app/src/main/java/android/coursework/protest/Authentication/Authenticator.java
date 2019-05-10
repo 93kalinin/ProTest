@@ -9,6 +9,7 @@ import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 
 /**
  * Является главным классом экрана регистрации/входа и управляется со стороны ОС. Отвечает за
@@ -56,11 +57,18 @@ public class Authenticator extends AppCompatActivity {
         UI.showLoadingSpinner();
         String email = inputs.getInput(inputs.signupEmailLayout);
         String password = inputs.getInput(inputs.signupPasswordLayout);
-        String nickname = inputs.getInput(inputs.signupNicknameLayout);    //need to attach it
+        String nickname = inputs.getInput(inputs.signupNicknameLayout);
+        FirebaseUser user = auth.getCurrentUser();
+        UserProfileChangeRequest attachNickname = new UserProfileChangeRequest.Builder()
+                .setDisplayName(nickname)
+                .build();
 
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, (task) -> {
-                        if (task.isSuccessful()) allowAccess(auth.getCurrentUser());
+                        if (task.isSuccessful()) {
+                            user.updateProfile(attachNickname)
+                                .addOnCompleteListener(task2 -> allowAccess(user));
+                        }
                         else    //possible invalid state at this point
                             UI.showSnackbar("Регистрация не удалась");
                 });

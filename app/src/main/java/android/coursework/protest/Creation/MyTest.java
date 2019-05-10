@@ -1,30 +1,33 @@
-package android.coursework.protest;
+package android.coursework.protest.Creation;
 
 import android.coursework.protest.Creation.Question;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
 /**
  * Содержит данные о тесте. Используется для создания, прохождения и хранения тестов в БД.
- * Иммутабелен. Возвращает последовательность вопросов Question через итератор.
+ * Возвращает последовательность вопросов Question через итератор.
  * Полностью перекладывает проверку валидности аргументов конструктора на внешний код.
+ * Конструктор по умолчанию и public поля необходимы для хранения класса в Firebase Realtime DB.
  */
 public final class MyTest implements Iterable<Question>, Serializable {
 
-    private final ArrayList<Question> questions;
-    private final Date creationTime;
-    public final String id;
-    final boolean isPrivate;
-    final String title;
-    final String description;
-    final String tags;
-    final String authorNickname;
-    final String authorId;
+    public ArrayList<Question> questions;
+    public Date creationTime;
+    public String id;
+    public boolean isPrivate;
+    public String accessKey;    //!!
+    public String title;
+    public String description;
+    public String tags;
+    public String authorNickname;
+    public String authorId;
+
+    public MyTest() {}
 
     public MyTest(ArrayList<Question> questions, String id, boolean isPrivate, String title,
             String description, String tags, String author, String authorId) {
@@ -39,9 +42,7 @@ public final class MyTest implements Iterable<Question>, Serializable {
         this.creationTime = Calendar.getInstance().getTime();
     }
 
-    public Date getCreationTime() { return new Date(creationTime.getTime()); }
-
     @Override
     public Iterator<Question> iterator()
-        { return Collections.unmodifiableList(questions).iterator(); }
+        { return questions.iterator(); }
 }

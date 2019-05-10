@@ -36,9 +36,9 @@ class AnswersRecyclerAdapter extends RecyclerView.Adapter<AnswersRecyclerAdapter
             int itemPosition = getAdapterPosition();
             Answer answer = answers.get(itemPosition);
 
-            if (answer.isCorrect()) view.setBackgroundResource(R.drawable.gray_line);
+            if (answer.isCorrect) view.setBackgroundResource(R.drawable.gray_line);
             else view.setBackgroundResource(R.drawable.line_for_selected_items);
-            answer.toggle();
+            answer.isCorrect = !answer.isCorrect;
         }
     }
 
@@ -70,7 +70,7 @@ class AnswersRecyclerAdapter extends RecyclerView.Adapter<AnswersRecyclerAdapter
         return answers.size();
     }
 
-    void addItem(String answer) {
+    void add(String answer) {
         if (answers.size() >= MAX_ANSWERS_AMOUNT)
             showSnackbar("Достигнуто предельно допустимое число ответов");
         answers.add(new Answer(answer, false));
