@@ -3,7 +3,6 @@ package android.coursework.protest.Creation;
 import android.content.Intent;
 import android.coursework.protest.R;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -18,6 +17,8 @@ import android.view.View;
 import java.io.Serializable;
 import java.util.Map;
 
+import static java.util.AbstractMap.SimpleEntry;
+
 /**
  * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers).
  */
@@ -26,9 +27,10 @@ public class CreateQuestion extends AppCompatActivity {
     public final int MIN_QUESTION_LENGTH = 5;
     public final int MIN_ANSWER_LENGTH = 5;
     public final int MIN_ANSWERS_AMOUNT = 2;
+    public final int MAX_ANSWERS_AMOUNT = 16;
 
     private Map<String, Boolean> answers;
-    private AnswersRecyclerAdapter adapter;
+    private GenericRecyclerAdapter<Boolean> adapter;
     private Intent activityResult;
 
     private RecyclerView answersView;
@@ -48,7 +50,16 @@ public class CreateQuestion extends AppCompatActivity {
         questionInput = findViewById(R.id.question_input);
         toolbar = findViewById(R.id.question_creation_toolbar);
 
-        adapter = new AnswersRecyclerAdapter(rootLayout);
+        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout, MAX_ANSWERS_AMOUNT) {
+            @Override
+            void onClickListener(View view, int itemPosition) {
+                SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
+                if (answer.getValue())
+                    view.setBackgroundResource(R.drawable.line_for_selected_items);
+                else view.setBackgroundResource(R.drawable.gray_line);
+                answer.setValue(!answer.getValue());
+            }
+        };
         activityResult = new Intent();
         setSupportActionBar(toolbar);
         setUpRecyclerView();
@@ -69,7 +80,7 @@ public class CreateQuestion extends AppCompatActivity {
             error("Длина ответа должна быть хотя бы " + MIN_ANSWER_LENGTH + " символов");
             return;
         }
-        adapter.add(answer);
+        adapter.addItem(new SimpleEntry<>(answer, false));
         answerInput.setText("");
     }
 
@@ -80,22 +91,21 @@ public class CreateQuestion extends AppCompatActivity {
             new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
                                                | ItemTouchHelper.RIGHT) {
                 @Override
-                public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+                public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
                     int position = viewHolder.getAdapterPosition();
                     adapter.removeItem(position);
                 }
 
                 @Override
-                public boolean onMove(@NonNull RecyclerView recyclerView,
-                                      @NonNull RecyclerView.ViewHolder holder,
-                                      @NonNull RecyclerView.ViewHolder target)
+                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
+                                      RecyclerView.ViewHolder target)
                     { return false; }
                 });
         itemTouchHelper.attachToRecyclerView(answersView);
     }
 
     private boolean invalidInputs() {
-        answers = adapter.getAnswers();
+        answers = adapter.getItems();
         if (answers.size() < MIN_ANSWERS_AMOUNT)
             return error("Вариантов ответа должно быть по меньшей мере " + MIN_ANSWERS_AMOUNT);
         if (!answers.containsValue(true))

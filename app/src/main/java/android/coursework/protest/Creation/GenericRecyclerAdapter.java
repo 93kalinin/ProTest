@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
-import static android.view.View.OnClickListener;
 
 /**
  * Уменьшает количество повторяющегося кода, связанного с организацией работы с прокручиваемыми
@@ -25,7 +24,8 @@ import static android.view.View.OnClickListener;
  * функцию (поле onClick), которая будет изменять соответствующий элемент структуры данных.
  * @param <T> - тип объектов, хранимых в структуре данных.
  */
-class GenericRecyclerAdapter<T> extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
+abstract class GenericRecyclerAdapter<T>
+extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
 
     /**
      * Шаблон элемента прокручиваемого списка.
@@ -37,7 +37,7 @@ class GenericRecyclerAdapter<T> extends RecyclerView.Adapter<GenericRecyclerAdap
         ViewHolder(View itemView) {
             super(itemView);
             visibleText = itemView.findViewById(R.id.card_text);
-            itemView.setOnClickListener(viewHolderOnCickListener);
+            itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
         }
     }
 
@@ -46,19 +46,19 @@ class GenericRecyclerAdapter<T> extends RecyclerView.Adapter<GenericRecyclerAdap
         чтобы работать с необходимым для реализации прокручиваемого списка методом onBindViewHolder
         Одновременно, она должна содержать пары ключ-значение, чем и объясняется её сложный тип.
      */
-    private final List<SimpleEntry<String, T>> collection;
+    protected final List<SimpleEntry<String, T>> collection;
     private final ConstraintLayout rootLayout;
-    private OnClickListener viewHolderOnCickListener;
     private SimpleEntry<String, T> lastDeleted;
     private int lastPosition;
     private int LIMIT;
 
-    GenericRecyclerAdapter(ConstraintLayout rootLayout, OnClickListener listener, int limit) {
-        viewHolderOnCickListener = listener;
+    GenericRecyclerAdapter(ConstraintLayout rootLayout, int limit) {
         collection = new LinkedList<>();
         this.rootLayout = rootLayout;
         LIMIT = limit;
     }
+
+    abstract void onClickListener(View view, int adapterPosition);
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
