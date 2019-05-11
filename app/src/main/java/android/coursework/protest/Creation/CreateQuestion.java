@@ -86,8 +86,9 @@ public class CreateQuestion extends AppCompatActivity {
                 }
 
                 @Override
-                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                                      RecyclerView.ViewHolder target)
+                public boolean onMove(@NonNull RecyclerView recyclerView,
+                                      @NonNull RecyclerView.ViewHolder holder,
+                                      @NonNull RecyclerView.ViewHolder target)
                     { return false; }
                 });
         itemTouchHelper.attachToRecyclerView(answersView);

@@ -55,7 +55,7 @@ class AnswersRecyclerAdapter extends RecyclerView.Adapter<AnswersRecyclerAdapter
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.answer_preview, viewGroup, false);
+                .inflate(R.layout.generic_card, viewGroup, false);
         return new ViewHolder(view);
     }
 

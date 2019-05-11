@@ -19,13 +19,13 @@ import java.util.List;
  */
 class QuestionsRecyclerAdapter extends RecyclerView.Adapter<QuestionsRecyclerAdapter.ViewHolder> {
 
-    class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView questionText;
 
         ViewHolder(View itemView) {
             super(itemView);
-            questionText = itemView.findViewById(R.id.question_text);
+            questionText = itemView.findViewById(R.id.card_text);
         }
     }
 
@@ -43,7 +43,7 @@ class QuestionsRecyclerAdapter extends RecyclerView.Adapter<QuestionsRecyclerAda
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.answer_preview, viewGroup, false);
+                .inflate(R.layout.generic_card, viewGroup, false);
         return new QuestionsRecyclerAdapter.ViewHolder(view);
     }
 
