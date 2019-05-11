@@ -24,7 +24,7 @@ import static java.util.AbstractMap.SimpleEntry;
  *
  * @param <T> - тип объектов, хранимых в структуре данных.
  */
-abstract class GenericRecyclerAdapter<T>
+class GenericRecyclerAdapter<T>
 extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
 
     /**
@@ -59,15 +59,13 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         this.rootLayout = rootLayout;
         LIMIT = limit;
     }
-    //TODO:что делать при отсутствии надобности в обработчике?
     /**
-     * Позволяет задать обработчик нажатия на элемент прокручиваемого списка.
-     * Если такой обработчик не требуется, то при переопределении достаточно
+     * Позволяет задать обработчик нажатия на элемент прокручиваемого списка переопределением
      *
      * @param view - ссылка на графическое представление элемента списка
      * @param adapterPosition - номер данного элемента в списке
      */
-    abstract void onClickListener(View view, int adapterPosition);
+    void onClickListener(View view, int adapterPosition) { }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {

@@ -1,7 +1,7 @@
 package android.coursework.protest.Authentication;
 
 import android.content.Intent;
-import android.coursework.protest.Creation.CreateQuestion;
+import android.coursework.protest.Creation.MakeQuestion;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -76,7 +76,7 @@ public class Authenticator extends AppCompatActivity {
 
     private void allowAccess(FirebaseUser user) {
         if (user == null) throw new SecurityException("no user is currently logged in");
-        Intent intent = new Intent(this, CreateQuestion.class);
+        Intent intent = new Intent(this, MakeQuestion.class);
         intent.putExtra("user", user);
         startActivity(intent);
         this.finish();

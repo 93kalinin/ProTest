@@ -24,15 +24,15 @@ import static java.util.AbstractMap.SimpleEntry;
  * сопоставляется набор вариантов ответа, каждому из которых в свою очередь сопоставляется
  * верность/ложность. Адаптер здесь мог бы содержать
  */
-public class CreateTest extends AppCompatActivity {
+public class MakeTest extends AppCompatActivity {
 
     private Map<String, Map<String, Boolean>> questions;
     private GenericRecyclerAdapter<Map<String, Boolean>> adapter;
 
     private Resources appResources;
     private RecyclerView questionsView;
-    private Toolbar toolbar;
     private ConstraintLayout rootLayout;
+    private Toolbar toolbar;
     private TextInputEditText titleInput;
     private TextInputEditText descriptionInput;
 
@@ -80,33 +80,14 @@ public class CreateTest extends AppCompatActivity {
             error(TOO_MANY_QUESTIONS + MAX_QUESTIONS_AMOUNT);
             return;
         }
-        Intent intent = new Intent(this, CreateQuestion.class);
+        Intent intent = new Intent(this, MakeQuestion.class);
         startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
     }
 
     private void setUpRecyclerView() {
-        adapter = new GenericRecyclerAdapter<Map<String, Boolean>>(rootLayout,
-                appResources.getInteger(R.integer.max_questions_amount)) {
-            @Override
-            void onClickListener(View view, int itemPosition) { }
-        };
-        questionsView.setAdapter(adapter);
-        questionsView.setLayoutManager(new LinearLayoutManager(this));
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
-                        | ItemTouchHelper.RIGHT) {
-                    @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
-                        int position = viewHolder.getAdapterPosition();
-                        adapter.removeItem(position);
-                    }
-
-                    @Override
-                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                                          RecyclerView.ViewHolder target)
-                    { return false; }
-                });
-        itemTouchHelper.attachToRecyclerView(questionsView);
+        adapter = new GenericRecyclerAdapter<>(rootLayout,
+                appResources.getInteger(R.integer.max_questions_amount));
+        RecyclerHelper.finishSetup(questionsView, new LinearLayoutManager(this), adapter);
     }
 
     private boolean invalidInputs() {

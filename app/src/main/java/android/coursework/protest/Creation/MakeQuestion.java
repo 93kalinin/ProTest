@@ -1,6 +1,5 @@
 package android.coursework.protest.Creation;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.coursework.protest.R;
@@ -13,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 
 import java.io.Serializable;
@@ -25,7 +23,7 @@ import static java.util.AbstractMap.SimpleEntry;
  * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers). Каждому
  * варианту ответа сопоставляется его верность/ложность
  */
-public class CreateQuestion extends AppCompatActivity {
+public class MakeQuestion extends AppCompatActivity {
 
     private Map<String, Boolean> answers;
     private GenericRecyclerAdapter<Boolean> adapter;
@@ -80,8 +78,7 @@ public class CreateQuestion extends AppCompatActivity {
     /**
      * Инициализирует адаптер, организующий работу с прокручиваемым списком вариантов ответа.
      * А именно, цепляет к элементам списка обработчик нажатий, помечающий вариант ответа как
-     * верный и отмечающий его в списке цветной полоской. Также добавляет обработчик свайпов
-     * из стороны в сторону, позволяющий удалять элементы списка
+     * верный и отмечающий его в списке цветной полоской.
      */
     private void setUpRecyclerView() {
         adapter = new GenericRecyclerAdapter<Boolean>(rootLayout,
@@ -95,23 +92,7 @@ public class CreateQuestion extends AppCompatActivity {
                 answer.setValue(!answer.getValue());
             }
         };
-        answersView.setAdapter(adapter);
-        answersView.setLayoutManager(new LinearLayoutManager(this));
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
-            new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
-                    | ItemTouchHelper.RIGHT) {
-                @Override
-                public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
-                    int position = viewHolder.getAdapterPosition();
-                    adapter.removeItem(position);
-                }
-
-                @Override
-                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                        RecyclerView.ViewHolder target)
-                    { return false; }
-                });
-        itemTouchHelper.attachToRecyclerView(answersView);
+        RecyclerHelper.finishSetup(answersView, new LinearLayoutManager(this), adapter);
     }
 
     private boolean invalidInputs() {
@@ -131,7 +112,7 @@ public class CreateQuestion extends AppCompatActivity {
         return false;
     }
 
-    private boolean error(String message) {
+    boolean error(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
         return true;
