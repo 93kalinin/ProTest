@@ -18,17 +18,19 @@ import static java.util.AbstractMap.SimpleEntry;
 
 /**
  * Уменьшает количество повторяющегося кода, связанного с организацией работы с прокручиваемыми
- * списками, которых полно в интерфейсе приложения на разных экранах. Прокручиваемый список
- * является графическим представлением некоторой структуры данных (поле collection), позволяющим
- * с ней взаимодействовать. Например, нажатие на элемент списка может вызывать
- * функцию (поле onClick), которая будет изменять соответствующий элемент структуры данных.
+ * списками, которых полно в интерфейсе приложения на разных экранах. Для удобного отображения,
+ * создания и редактирования элементов списка хранит предварительную, легко редактируемую коллекцию,
+ * которая при завершении редактирования преобразуется в Map
+ *
  * @param <T> - тип объектов, хранимых в структуре данных.
  */
 abstract class GenericRecyclerAdapter<T>
 extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
 
     /**
-     * Шаблон элемента прокручиваемого списка.
+     * Шаблон элемента прокручиваемого списка. Прикрепляет к нему обработчик нажатия.
+     * Позволяет использовать заново уже созданные элементы прокручиваемого списка, изменяя их
+     * содержимое в соответствии с отображаемой коллекцией. Тем самым экономит ресурсы.
      */
     class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -46,7 +48,7 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         чтобы работать с необходимым для реализации прокручиваемого списка методом onBindViewHolder
         Одновременно, она должна содержать пары ключ-значение, чем и объясняется её сложный тип.
      */
-    protected final List<SimpleEntry<String, T>> collection;
+    final List<SimpleEntry<String, T>> collection;
     private final ConstraintLayout rootLayout;
     private SimpleEntry<String, T> lastDeleted;
     private int lastPosition;
@@ -57,7 +59,14 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         this.rootLayout = rootLayout;
         LIMIT = limit;
     }
-
+    //TODO:что делать при отсутствии надобности в обработчике?
+    /**
+     * Позволяет задать обработчик нажатия на элемент прокручиваемого списка.
+     * Если такой обработчик не требуется, то при переопределении достаточно
+     *
+     * @param view - ссылка на графическое представление элемента списка
+     * @param adapterPosition - номер данного элемента в списке
+     */
     abstract void onClickListener(View view, int adapterPosition);
 
     @Override
@@ -68,8 +77,7 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder viewHolder,
-                                 int position) {
+    public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder viewHolder, int position) {
         String question = collection.get(position).getKey();
         viewHolder.visibleText.setText(question);
     }
@@ -80,8 +88,11 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
     }
 
     void addItem(SimpleEntry<String, T> item) {
-        if (collection.size() >= LIMIT)
-            showSnackbar("Достигнуто предельно допустимое число элементов");
+        if (collection.size() >= LIMIT) {
+            Snackbar.make(rootLayout, R.string.limit_exceeded_error, Snackbar.LENGTH_SHORT)
+                    .show();
+            return;
+        }
         collection.add(item);
         notifyDataSetChanged();
     }
@@ -91,7 +102,18 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         lastPosition = position;
         collection.remove(position);
         notifyItemRemoved(position);
-        showUndoSnackbar();
+        Snackbar.make(rootLayout, R.string.element_deleted, Snackbar.LENGTH_LONG)
+                .setAction(R.string.cancel, view -> {
+                    if (lastDeleted == null  ||  collection.size() >= LIMIT) {
+                        Snackbar.make(rootLayout, R.string.failed_to_restore, Snackbar.LENGTH_SHORT)
+                                .show();
+                        return;
+                    }
+                    collection.add(lastPosition, lastDeleted);
+                    notifyItemInserted(lastPosition);
+                    lastDeleted = null;
+                })
+                .show();
     }
 
     Map<String, T> getItems() {
@@ -99,25 +121,5 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         for (SimpleEntry<String, T> entry : collection)
             map.put(entry.getKey(), entry.getValue());
         return map;
-    }
-
-    private void showUndoSnackbar() {
-        Snackbar snackbar = Snackbar.make(rootLayout, "Элемент удален",
-                Snackbar.LENGTH_LONG);
-        snackbar.setAction("отмена", v -> {
-            if (lastDeleted == null  ||  collection.size() >= LIMIT) {
-                showSnackbar("Не удалось восстановить элемент");
-                return;
-            }
-            collection.add(lastPosition, lastDeleted);
-            notifyItemInserted(lastPosition);
-            lastDeleted = null;
-            });
-        snackbar.show();
-    }
-
-    private void showSnackbar(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_SHORT)
-                .show();
     }
 }

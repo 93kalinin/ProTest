@@ -1,6 +1,8 @@
 package android.coursework.protest.Creation;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
@@ -20,19 +22,16 @@ import java.util.Map;
 import static java.util.AbstractMap.SimpleEntry;
 
 /**
- * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers).
+ * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers). Каждому
+ * варианту ответа сопоставляется его верность/ложность
  */
 public class CreateQuestion extends AppCompatActivity {
-
-    public final int MIN_QUESTION_LENGTH = 5;
-    public final int MIN_ANSWER_LENGTH = 5;
-    public final int MIN_ANSWERS_AMOUNT = 2;
-    public final int MAX_ANSWERS_AMOUNT = 16;
 
     private Map<String, Boolean> answers;
     private GenericRecyclerAdapter<Boolean> adapter;
     private Intent activityResult;
 
+    private Resources appResources;
     private RecyclerView answersView;
     private Toolbar toolbar;
     private ConstraintLayout rootLayout;
@@ -43,23 +42,13 @@ public class CreateQuestion extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_question);
+        appResources = getResources();
 
         rootLayout = findViewById(R.id.create_question_root_layout);
         answerInput = findViewById(R.id.answer_input);
         answersView = findViewById(R.id.answers_recycler_view);
         questionInput = findViewById(R.id.question_input);
         toolbar = findViewById(R.id.question_creation_toolbar);
-
-        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout, MAX_ANSWERS_AMOUNT) {
-            @Override
-            void onClickListener(View view, int itemPosition) {
-                SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
-                if (answer.getValue())
-                    view.setBackgroundResource(R.drawable.line_for_selected_items);
-                else view.setBackgroundResource(R.drawable.gray_line);
-                answer.setValue(!answer.getValue());
-            }
-        };
         activityResult = new Intent();
         setSupportActionBar(toolbar);
         setUpRecyclerView();
@@ -76,20 +65,41 @@ public class CreateQuestion extends AppCompatActivity {
 
     public void addAnswer(View view) {
         String answer = answerInput.getText().toString();
+        int MIN_ANSWER_LENGTH = appResources.getInteger(R.integer.min_answer_length);
+        String error = appResources.getString(R.string.answer_too_short) + MIN_ANSWER_LENGTH;
+
         if (answer.length() < MIN_ANSWER_LENGTH) {
-            error("Длина ответа должна быть хотя бы " + MIN_ANSWER_LENGTH + " символов");
+            Snackbar.make(rootLayout, error, Snackbar.LENGTH_SHORT)
+                    .show();
             return;
         }
         adapter.addItem(new SimpleEntry<>(answer, false));
         answerInput.setText("");
     }
 
+    /**
+     * Инициализирует адаптер, организующий работу с прокручиваемым списком вариантов ответа.
+     * А именно, цепляет к элементам списка обработчик нажатий, помечающий вариант ответа как
+     * верный и отмечающий его в списке цветной полоской. Также добавляет обработчик свайпов
+     * из стороны в сторону, позволяющий удалять элементы списка
+     */
     private void setUpRecyclerView() {
+        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout,
+                appResources.getInteger(R.integer.max_answers_amount)) {
+            @Override
+            void onClickListener(View view, int itemPosition) {
+                SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
+                if (answer.getValue())
+                    view.setBackgroundResource(R.drawable.line_for_selected_items);
+                else view.setBackgroundResource(R.drawable.gray_line);
+                answer.setValue(!answer.getValue());
+            }
+        };
         answersView.setAdapter(adapter);
         answersView.setLayoutManager(new LinearLayoutManager(this));
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
             new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
-                                               | ItemTouchHelper.RIGHT) {
+                    | ItemTouchHelper.RIGHT) {
                 @Override
                 public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
                     int position = viewHolder.getAdapterPosition();
@@ -98,7 +108,7 @@ public class CreateQuestion extends AppCompatActivity {
 
                 @Override
                 public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                                      RecyclerView.ViewHolder target)
+                        RecyclerView.ViewHolder target)
                     { return false; }
                 });
         itemTouchHelper.attachToRecyclerView(answersView);
@@ -106,17 +116,24 @@ public class CreateQuestion extends AppCompatActivity {
 
     private boolean invalidInputs() {
         answers = adapter.getItems();
+        int MIN_ANSWERS_AMOUNT = appResources.getInteger(R.integer.min_answers_amount);
+        int MIN_QUESTION_LENGTH = appResources.getInteger(R.integer.min_question_length);
+        String TOO_FEW_ANSWERS = appResources.getString(R.string.too_few_answers);
+        String NO_RIGHT_ANSWERS_FOUND = appResources.getString(R.string.no_right_answers_found);
+        String QUESTION_TOO_SHORT = appResources.getString(R.string.question_too_short);
+
         if (answers.size() < MIN_ANSWERS_AMOUNT)
-            return error("Вариантов ответа должно быть по меньшей мере " + MIN_ANSWERS_AMOUNT);
+            return error(TOO_FEW_ANSWERS + MIN_ANSWERS_AMOUNT);
         if (!answers.containsValue(true))
-            return error("Хотя бы один из вариантов ответов должен быть верным");
+            return error(NO_RIGHT_ANSWERS_FOUND);
         if (questionInput.getText().length() < MIN_QUESTION_LENGTH)
-            return error("Вопросы менее " + MIN_QUESTION_LENGTH + " символов длиной недопустимы");
+            return error(QUESTION_TOO_SHORT + MIN_QUESTION_LENGTH);
         return false;
     }
 
     private boolean error(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG).show();
+        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
+                .show();
         return true;
     }
 }

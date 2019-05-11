@@ -1,6 +1,7 @@
 package android.coursework.protest.Creation;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -14,24 +15,42 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.coursework.protest.R;
 
+import java.util.Map;
+
+import static java.util.AbstractMap.SimpleEntry;
+
+/**
+ * Отвечает за создание тестов. Вопросы хранятся в поле questions, где каждому вопросу
+ * сопоставляется набор вариантов ответа, каждому из которых в свою очередь сопоставляется
+ * верность/ложность. Адаптер здесь мог бы содержать
+ */
 public class CreateTest extends AppCompatActivity {
 
-    final int MIN_DESCRIPTION_LENGTH = 10;
-    final int MIN_QUESTIONS_AMOUNT = 3;
-    final int MIN_TITLE_LENGTH = 5;
-    final int CREATE_QUESTION_REQUEST_CODE = 100;
+    private Map<String, Map<String, Boolean>> questions;
+    private GenericRecyclerAdapter<Map<String, Boolean>> adapter;
+
+    private Resources appResources;
+    private RecyclerView questionsView;
+    private Toolbar toolbar;
     private ConstraintLayout rootLayout;
     private TextInputEditText titleInput;
     private TextInputEditText descriptionInput;
-    private RecyclerView recyclerView;
-    private QuestionsRecyclerAdapter adapter;
+
+    final int CREATE_QUESTION_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_test);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        appResources = getResources();
+
+        rootLayout = findViewById(R.id.create_test_root_layout);
+        titleInput = findViewById(R.id.title_input);
+        descriptionInput = findViewById(R.id.test_description_input);
+        questionsView = findViewById(R.id.questions_recycler_view);
+        toolbar = findViewById(R.id.test_creation_toolbar);
         setSupportActionBar(toolbar);
+        setUpRecyclerView();
 
         FloatingActionButton fab = findViewById(R.id.finish_question_creation_fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -41,49 +60,76 @@ public class CreateTest extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        rootLayout = findViewById(R.id.root_test_creation_layout);
-        title_input = findViewById(R.id.title_input);
-        recyclerView = findViewById(R.id.questions_recycler_view);
-        descriptionInput = findViewById(R.id.test_description_input);
-        adapter = new QuestionsRecyclerAdapter(rootLayout);
-        setUpRecyclerView();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  resultCode == RESULT_OK) {
-            Question question = (Question) data.getExtras().getSerializable("question");
-            adapter.addQuestion(question);
+            String question = data.getExtras().getString("question");
+            Map<String, Boolean> answers =
+                (Map<String, Boolean>) data.getExtras().getSerializable("answers");
+            adapter.addItem(new SimpleEntry<>(question, answers));
         }
     }
 
-    private void setUpRecyclerView() {
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteQuestions(adapter));
-        itemTouchHelper.attachToRecyclerView(recyclerView);
+    public void createQuestion(View view) {
+        int MAX_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.max_questions_amount);
+        String TOO_MANY_QUESTIONS = appResources.getString(R.string.too_many_questions);
+
+        if (questions.size() >= MAX_QUESTIONS_AMOUNT) {
+            error(TOO_MANY_QUESTIONS + MAX_QUESTIONS_AMOUNT);
+            return;
+        }
+        Intent intent = new Intent(this, CreateQuestion.class);
+        startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
     }
 
-    private boolean inputsAreValid() {
-        if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
-            return error("Описание менее " + MIN_DESCRIPTION_LENGTH
-                    + " символов длиной недопустимо");
-        if (adapter.getQuestions().size() < MIN_QUESTIONS_AMOUNT)
-            return error("Вопросов должно быть по меньшей мере " + MIN_QUESTIONS_AMOUNT);
+    private void setUpRecyclerView() {
+        adapter = new GenericRecyclerAdapter<Map<String, Boolean>>(rootLayout,
+                appResources.getInteger(R.integer.max_questions_amount)) {
+            @Override
+            void onClickListener(View view, int itemPosition) { }
+        };
+        questionsView.setAdapter(adapter);
+        questionsView.setLayoutManager(new LinearLayoutManager(this));
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
+                        | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
+                        int position = viewHolder.getAdapterPosition();
+                        adapter.removeItem(position);
+                    }
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
+                                          RecyclerView.ViewHolder target)
+                    { return false; }
+                });
+        itemTouchHelper.attachToRecyclerView(questionsView);
+    }
+
+    private boolean invalidInputs() {
+        questions = adapter.getItems();
+        int MIN_DESCRIPTION_LENGTH = appResources.getInteger(R.integer.min_description_length);
+        int MIN_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.min_questions_amount);
+        int MIN_TITLE_LENGTH = appResources.getInteger(R.integer.min_title_length);
+        String DESCRIPTION_TOO_SHORT = appResources.getString(R.string.description_too_short);
+        String TOO_FEW_QUESTIONS = appResources.getString(R.string.too_few_questions);
+        String TITLE_TOO_SHORT = appResources.getString(R.string.title_too_short);
+
+        if (questions.size() < MIN_QUESTIONS_AMOUNT)
+            return error(TOO_FEW_QUESTIONS + MIN_QUESTIONS_AMOUNT);
         if (titleInput.getText().length() < MIN_TITLE_LENGTH)
-            return error("Минимальная длина названия теста - " + MIN_TITLE_LENGTH + " символов");
-        return true;
+            return error(TITLE_TOO_SHORT + MIN_TITLE_LENGTH);
+        if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
+            return error(DESCRIPTION_TOO_SHORT + MIN_DESCRIPTION_LENGTH);
+        return false;
     }
 
     private boolean error(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
-        return false;
-    }
-
-    void showSnackbar(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
-                .show();
+        return true;
     }
 }
