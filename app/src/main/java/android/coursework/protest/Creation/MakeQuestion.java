@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
@@ -56,7 +57,7 @@ public class MakeQuestion extends AppCompatActivity {
             if (invalidInputs()) return;
             activityResult.putExtra("question", questionInput.getText().toString());
             activityResult.putExtra("answers", (Serializable) answers);
-            setResult(RESULT_OK);
+            setResult(RESULT_OK, activityResult);
             finish();
         });
     }
@@ -81,18 +82,19 @@ public class MakeQuestion extends AppCompatActivity {
      * верный и отмечающий его в списке цветной полоской.
      */
     private void setUpRecyclerView() {
-        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout,
-                appResources.getInteger(R.integer.max_answers_amount)) {
+        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout, new LinkedList<>()) {
             @Override
             void onClickListener(View view, int itemPosition) {
                 SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
+                answer.setValue(!answer.getValue());
                 if (answer.getValue())
                     view.setBackgroundResource(R.drawable.line_for_selected_items);
                 else view.setBackgroundResource(R.drawable.gray_line);
-                answer.setValue(!answer.getValue());
             }
         };
-        RecyclerHelper.finishSetup(answersView, new LinearLayoutManager(this), adapter);
+        adapter.LIMIT = appResources.getInteger(R.integer.max_answers_amount);
+        GenericRecyclerAdapter.attachDeleteOnSwipe(answersView,
+                new LinearLayoutManager(this), adapter);
     }
 
     private boolean invalidInputs() {

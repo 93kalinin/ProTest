@@ -2,6 +2,7 @@ package android.coursework.protest.Authentication;
 
 import android.content.Intent;
 import android.coursework.protest.Creation.MakeQuestion;
+import android.coursework.protest.Creation.MakeTest;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -59,14 +60,14 @@ public class Authenticator extends AppCompatActivity {
         String password = inputs.getInput(inputs.signupPasswordLayout);
         String nickname = inputs.getInput(inputs.signupNicknameLayout);
         FirebaseUser user = auth.getCurrentUser();
-        UserProfileChangeRequest attachNickname = new UserProfileChangeRequest.Builder()
+        UserProfileChangeRequest nicknameRequest = new UserProfileChangeRequest.Builder()
                 .setDisplayName(nickname)
                 .build();
 
         auth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, (task) -> {
                         if (task.isSuccessful()) {
-                            user.updateProfile(attachNickname)
+                            user.updateProfile(nicknameRequest)
                                 .addOnCompleteListener(task2 -> allowAccess(user));
                         }
                         else    //possible invalid state at this point
@@ -76,8 +77,8 @@ public class Authenticator extends AppCompatActivity {
 
     private void allowAccess(FirebaseUser user) {
         if (user == null) throw new SecurityException("no user is currently logged in");
-        Intent intent = new Intent(this, MakeQuestion.class);
-        intent.putExtra("user", user);
+        Intent intent = new Intent(this, MakeTest.class);
+        intent.putExtra("user", user);  //лишнее, проще найти его там
         startActivity(intent);
         this.finish();
     }

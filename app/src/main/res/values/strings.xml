@@ -20,12 +20,21 @@
     <string name="element_deleted">Элемент удален</string>
     <string name="cancel">Отмена</string>
     <string name="failed_to_restore">Не удалось восстановить элемент</string>
-    <string name="answer_too_short">Минимально допустимое число символов в ответе - </string>
+    <string name="answer_too_short">Минимально допустимое число символов в ответе</string>
     <string name="too_few_answers">Вариантов ответа должно быть по меньшей мере </string>
     <string name="no_right_answers_found">Хотя бы один из вариантов ответов должен быть верным</string>
-    <string name="question_too_short">Минимально допустимое число символов в вопросе - </string>
-    <string name="too_many_questions">Предельно допустимое число вопросов - </string>
-    <string name="description_too_short">Минимально допустимое число символов в описании - </string>
+    <string name="question_too_short">Минимально допустимое число символов в вопросе</string>
+    <string name="too_many_questions">Предельно допустимое число вопросов</string>
+    <string name="description_too_short">Минимально допустимое число символов в описании</string>
     <string name="too_few_questions">Вопросов должно быть по меньшей мере </string>
-    <string name="title_too_short">Минимальная длина названия теста - </string>
+    <string name="title_too_short">Минимальная длина названия теста</string>
+    <string name="no_match_found">Поиск не дал результата</string>
+
+
+    <string-array name="tags">
+        <item>математика</item>
+        <item>физика</item>
+        <item>программирование</item>
+        <item>биология</item>
+    </string-array>
 </resources>

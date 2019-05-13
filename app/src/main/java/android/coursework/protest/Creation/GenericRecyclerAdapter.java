@@ -3,13 +3,15 @@ package android.coursework.protest.Creation;
 import android.coursework.protest.R;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,30 @@ import static java.util.AbstractMap.SimpleEntry;
  */
 class GenericRecyclerAdapter<T>
 extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
+
+    /**
+     * Добавляет прокручиваемым спискам возможность удаления элементов свайпом.
+     */
+    static void attachDeleteOnSwipe(RecyclerView view, LinearLayoutManager manager,
+                                    GenericRecyclerAdapter adapter) {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
+                        | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
+                        int position = viewHolder.getAdapterPosition();
+                        adapter.removeItem(position);
+                    }
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
+                                          RecyclerView.ViewHolder target)
+                    { return false; }
+                });
+        view.setAdapter(adapter);
+        view.setLayoutManager(manager);
+        itemTouchHelper.attachToRecyclerView(view);
+    }
 
     /**
      * Шаблон элемента прокручиваемого списка. Прикрепляет к нему обработчик нажатия.
@@ -48,19 +74,18 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
         чтобы работать с необходимым для реализации прокручиваемого списка методом onBindViewHolder
         Одновременно, она должна содержать пары ключ-значение, чем и объясняется её сложный тип.
      */
-    final List<SimpleEntry<String, T>> collection;
+    protected final List<SimpleEntry<String, T>> collection;
     private final ConstraintLayout rootLayout;
     private SimpleEntry<String, T> lastDeleted;
     private int lastPosition;
-    private int LIMIT;
+    int LIMIT = Integer.MAX_VALUE;
 
-    GenericRecyclerAdapter(ConstraintLayout rootLayout, int limit) {
-        collection = new LinkedList<>();
+    GenericRecyclerAdapter(ConstraintLayout rootLayout, LinkedList<SimpleEntry<String, T>> init) {
+        collection = init;
         this.rootLayout = rootLayout;
-        LIMIT = limit;
     }
     /**
-     * Позволяет задать обработчик нажатия на элемент прокручиваемого списка переопределением
+     * Переопределив этот метод, можно задать обработчик нажатия на элемент списка
      *
      * @param view - ссылка на графическое представление элемента списка
      * @param adapterPosition - номер данного элемента в списке
@@ -87,7 +112,8 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
 
     void addItem(SimpleEntry<String, T> item) {
         if (collection.size() >= LIMIT) {
-            Snackbar.make(rootLayout, R.string.limit_exceeded_error, Snackbar.LENGTH_SHORT)
+            Snackbar.make(rootLayout, R.string.limit_exceeded_error,
+                          Snackbar.LENGTH_SHORT)
                     .show();
             return;
         }
@@ -115,7 +141,7 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> {
     }
 
     Map<String, T> getItems() {
-        LinkedHashMap<String, T> map = new LinkedHashMap<>();
+        HashMap<String, T> map = new HashMap<>();
         for (SimpleEntry<String, T> entry : collection)
             map.put(entry.getKey(), entry.getValue());
         return map;
