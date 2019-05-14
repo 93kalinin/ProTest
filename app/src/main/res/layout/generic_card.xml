@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/answer_card"
+    android:id="@+id/generic_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="5dp"
@@ -13,7 +13,7 @@
     card_view:contentPadding="10dp">
 
     <TextView
-        android:id="@+id/card_text"
+        android:id="@+id/generic_card_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"

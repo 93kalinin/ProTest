@@ -5,17 +5,15 @@ import android.content.res.Resources;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
@@ -27,7 +25,7 @@ import static java.util.AbstractMap.SimpleEntry;
 public class MakeQuestion extends AppCompatActivity {
 
     private Map<String, Boolean> answers;
-    private GenericRecyclerAdapter<Boolean> adapter;
+    private GenericRecyclerAdapter<SimpleEntry<String, Boolean>> adapter;
     private Intent activityResult;
 
     private Resources appResources;
@@ -52,28 +50,27 @@ public class MakeQuestion extends AppCompatActivity {
         setSupportActionBar(toolbar);
         setUpRecyclerView();
 
-        FloatingActionButton fab = findViewById(R.id.finish_question_creation_fab);
-        fab.setOnClickListener(view -> {
+        findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
             if (invalidInputs()) return;
             activityResult.putExtra("question", questionInput.getText().toString());
             activityResult.putExtra("answers", (Serializable) answers);
             setResult(RESULT_OK, activityResult);
             finish();
         });
-    }
 
-    public void addAnswer(View view) {
-        String answer = answerInput.getText().toString();
-        int MIN_ANSWER_LENGTH = appResources.getInteger(R.integer.min_answer_length);
-        String error = appResources.getString(R.string.answer_too_short) + MIN_ANSWER_LENGTH;
+        findViewById(R.id.add_answer_button).setOnClickListener(button -> {
+            String answer = answerInput.getText().toString();
+            int MIN_ANSWER_LENGTH = appResources.getInteger(R.integer.min_answer_length);
+            String error = appResources.getString(R.string.answer_too_short) + MIN_ANSWER_LENGTH;
 
-        if (answer.length() < MIN_ANSWER_LENGTH) {
-            Snackbar.make(rootLayout, error, Snackbar.LENGTH_SHORT)
-                    .show();
-            return;
-        }
-        adapter.addItem(new SimpleEntry<>(answer, false));
-        answerInput.setText("");
+            if (answer.length() < MIN_ANSWER_LENGTH) {
+                Snackbar.make(rootLayout, error, Snackbar.LENGTH_SHORT)
+                        .show();
+                return;
+            }
+            adapter.addItem(new SimpleEntry<>(answer, false));
+            answerInput.setText("");
+        });
     }
 
     /**
@@ -82,7 +79,15 @@ public class MakeQuestion extends AppCompatActivity {
      * верный и отмечающий его в списке цветной полоской.
      */
     private void setUpRecyclerView() {
-        adapter = new GenericRecyclerAdapter<Boolean>(rootLayout, new LinkedList<>()) {
+        adapter = new GenericRecyclerAdapter<SimpleEntry<String, Boolean>>(rootLayout) {
+
+            @Override
+            public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder viewHolder,
+                    int position) {
+                String question = collection.get(position).getKey();
+                viewHolder.visibleText.setText(question);
+            }
+
             @Override
             void onClickListener(View view, int itemPosition) {
                 SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
@@ -92,13 +97,15 @@ public class MakeQuestion extends AppCompatActivity {
                 else view.setBackgroundResource(R.drawable.gray_line);
             }
         };
-        adapter.LIMIT = appResources.getInteger(R.integer.max_answers_amount);
-        GenericRecyclerAdapter.attachDeleteOnSwipe(answersView,
-                new LinearLayoutManager(this), adapter);
+        adapter.ITEMS_LIMIT = appResources.getInteger(R.integer.max_answers_amount);
+        adapter.attachDeleteOnSwipeTo(answersView, this);
     }
 
     private boolean invalidInputs() {
-        answers = adapter.getItems();
+        answers = new HashMap<>();
+        for (SimpleEntry<String, Boolean> answer : adapter)
+            answers.put(answer.getKey(), answer.getValue());
+
         int MIN_ANSWERS_AMOUNT = appResources.getInteger(R.integer.min_answers_amount);
         int MIN_QUESTION_LENGTH = appResources.getInteger(R.integer.min_question_length);
         String TOO_FEW_ANSWERS = appResources.getString(R.string.too_few_answers);

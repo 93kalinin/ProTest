@@ -29,6 +29,12 @@
     <string name="too_few_questions">Вопросов должно быть по меньшей мере </string>
     <string name="title_too_short">Минимальная длина названия теста</string>
     <string name="no_match_found">Поиск не дал результата</string>
+    <string name="question_input_prompt">Вопрос</string>
+    <string name="answer_input_prompt">Вариант ответа</string>
+    <string name="add_button">добавить</string>
+    <string name="add_question_button">добавить вопрос</string>
+    <string name="privacy_switch_prompt_off">Открытый: после создания доступен всем зарегистрированным пользователям</string>
+    <string name="privacy_switch_prompt_on">Закрытый: доступ только по паролю, доступному после заврешения создания</string>
 
 
     <string-array name="tags">

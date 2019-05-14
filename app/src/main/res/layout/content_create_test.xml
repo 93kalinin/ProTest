@@ -9,6 +9,17 @@
     tools:context=".Creation.MakeTest"
     tools:showIn="@layout/activity_create_test">
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/tags_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
+
     <android.support.design.widget.TextInputLayout
         android:id="@+id/test_name_layout"
         android:layout_width="match_parent"
@@ -52,37 +63,24 @@
         android:id="@+id/tags_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/test_description_layout"/>
+        app:layout_constraintTop_toBottomOf="@+id/test_description_layout" />
 
     <Switch
-        android:id="@+id/visibility_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:checked="false"
-        app:layout_constraintBottom_toTopOf="@+id/questions_recycler_view"
-        app:layout_constraintEnd_toStartOf="@+id/textView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
-
-    <TextView
-        android:id="@+id/textView"
+        android:id="@+id/privacy_switch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:text="Открытый: после создания доступен всем зарегистрированным пользователям"
-        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:checked="false"
+        android:gravity="left|center"
+        android:text="@string/privacy_switch_prompt_off"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/visibility_switch"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tags_search" />
 
     <android.support.v7.widget.RecyclerView
@@ -96,19 +94,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@+id/add_question_button">
 
     </android.support.v7.widget.RecyclerView>
 
-    <ListView
-        android:id="@+id/tags_search_suggestions"
+    <Button
+        android:id="@+id/add_question_button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:visibility="gone"
+        android:text="@string/add_question_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
+        app:layout_constraintTop_toBottomOf="@+id/privacy_switch" />
 
 </android.support.constraint.ConstraintLayout>

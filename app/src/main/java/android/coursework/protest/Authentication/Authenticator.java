@@ -30,7 +30,7 @@ public class Authenticator extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         inputs = new Inputs(this);
         UI = new UI(this);
-        allowAccess(auth.getCurrentUser()); //для отладки!
+        //allowAccess(auth.getCurrentUser());
     }
 
     public void signIn(View view) {
