@@ -35,6 +35,8 @@
     <string name="add_question_button">добавить вопрос</string>
     <string name="privacy_switch_prompt_off">Открытый: после создания доступен всем зарегистрированным пользователям</string>
     <string name="privacy_switch_prompt_on">Закрытый: доступ только по паролю, доступному после заврешения создания</string>
+    <string name="add_tags">Добавить теги</string>
+    <string name="tag_added">тег добавлен</string>
 
 
     <string-array name="tags">

@@ -1,5 +1,7 @@
 package android.coursework.protest.Creation;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -12,21 +14,20 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.coursework.protest.R;
+import android.util.Log;
 import android.view.View;
-import android.widget.Filter;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
@@ -77,11 +78,11 @@ public class MakeTest extends AppCompatActivity {
         toolbar = findViewById(R.id.test_creation_toolbar);
         privacySwitch = findViewById(R.id.privacy_switch);
         setSupportActionBar(toolbar);
-        setUpQUestionsRecycler();
+        setUpQuestionsRecycler();
         setUpTagsSearch();
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
-            if (invalidInputs()) return;
+            if (!inputsOk()) return;
 
         });
 
@@ -112,7 +113,7 @@ public class MakeTest extends AppCompatActivity {
         }
     }
 
-    private void setUpQUestionsRecycler() {
+    private void setUpQuestionsRecycler() {
         questionsAdapter =
                 new GenericRecyclerAdapter<SimpleEntry<String, Map<String, Boolean>>>(rootLayout) {
             @Override
@@ -132,12 +133,37 @@ public class MakeTest extends AppCompatActivity {
                 { holder.visibleText.setText(collection.get(position)); }
 
             @Override
-            void onClickListener(View view, int itemPosition)
-                { selectedTags.add(collection.get(itemPosition)); }
+            void onClickListener(View view, int itemPosition) {
+                selectedTags.add(collection.get(itemPosition));
+                tagsSearchView.clearFocus();
+                Toast.makeText(getApplicationContext(), R.string.tag_added, Toast.LENGTH_SHORT)
+                        .show();
+                }
             };
         tagsAdapter.setListForSearch(availableTags);
+        tagsAdapter.setRowView(R.id.simple_row_text, R.layout.simple_row);
         tagsSuggestionsView.setAdapter(tagsAdapter);
         tagsSuggestionsView.setLayoutManager(new LinearLayoutManager(this));
+        tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
+            tagsSuggestionsView.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
+
+        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        tagsSearchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+        tagsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                tagsAdapter.getFilter().filter(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String query) {
+                tagsAdapter.getFilter().filter(query);
+                return false;
+            }
+        });
+        tagsSuggestionsView.bringToFront();
+        tagsSuggestionsView.requestLayout();
     }
 
     private Map<String, Object> buildTest() {
@@ -145,7 +171,7 @@ public class MakeTest extends AppCompatActivity {
         testDbEntry.put("questions", questions);
         testDbEntry.put("creationTime", new Timestamp(new Date().getTime()));
         testDbEntry.put("isPrivate", privacySwitch.isChecked());
-        testDbEntry.put("accessKey", DEFAULT_PUBLIC_ACCESS_KEY);
+        testDbEntry.put("accessKey", DEFAULT_PUBLIC_ACCESS_KEY.hashCode());
         testDbEntry.put("title", titleInput.getText().toString());
         testDbEntry.put("description", descriptionInput.getText().toString());
         testDbEntry.put("tags", selectedTags);
@@ -158,7 +184,7 @@ public class MakeTest extends AppCompatActivity {
 
     }
 
-    private boolean invalidInputs() {
+    private boolean inputsOk() {
         questions = new HashMap<>();
         for (SimpleEntry<String, Map<String, Boolean>> question : questionsAdapter)
             questions.put(question.getKey(), question.getValue());
@@ -176,12 +202,12 @@ public class MakeTest extends AppCompatActivity {
             return error(TITLE_TOO_SHORT + MIN_TITLE_LENGTH);
         if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
             return error(DESCRIPTION_TOO_SHORT + MIN_DESCRIPTION_LENGTH);
-        return false;
+        return true;
     }
 
     private boolean error(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
-        return true;
+        return false;
     }
 }

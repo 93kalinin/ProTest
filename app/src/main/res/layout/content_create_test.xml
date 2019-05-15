@@ -15,10 +15,14 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/common_google_signin_btn_icon_light_normal_background"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
+        app:layout_constraintTop_toTopOf="@+id/test_name_layout"
+        app:layout_constraintVertical_bias="0.0" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/test_name_layout"
@@ -63,8 +67,11 @@
         android:id="@+id/tags_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
+        android:elevation="5dp"
+        android:queryHint="@string/add_tags"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/test_description_layout" />
@@ -77,7 +84,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:checked="false"
-        android:gravity="left|center"
+        android:gravity="start|center"
         android:text="@string/privacy_switch_prompt_off"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -90,8 +97,6 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/add_question_button">

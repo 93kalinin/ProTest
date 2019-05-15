@@ -14,7 +14,6 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -44,13 +43,13 @@ implements Iterable<T>, Filterable {
         }
     }
 
-    LinkedList<T> collection;
-    LinkedList<String> listForSearch;
+    LinkedList<T> collection = new LinkedList<>();
+    private LinkedList<String> listForSearch;
     private final ConstraintLayout rootLayout;
     private T lastDeleted;
     private int lastPosition;
-    private int TEXT_VIEW_ID = R.id.simple_row_text;
-    private int VIEW_LAYOUT = R.layout.simple_row;
+    private int TEXT_VIEW_ID = R.id.generic_card_text;
+    private int VIEW_LAYOUT = R.layout.generic_card;
     int ITEMS_LIMIT = Integer.MAX_VALUE;
 
     GenericRecyclerAdapter(ConstraintLayout rootLayout) { this.rootLayout = rootLayout; }
@@ -72,7 +71,7 @@ implements Iterable<T>, Filterable {
      */
     void onClickListener(View view, int adapterPosition) { }
 
-    public void setListForSearch(LinkedList<String> list) { listForSearch = list; }
+    void setListForSearch(LinkedList<String> list) { listForSearch = list; }
 
     @Override
     public Filter getFilter() {
@@ -84,7 +83,7 @@ implements Iterable<T>, Filterable {
                 if (currentText.length() == 0)
                     return new FilterResults() {{ values = listForSearch; }};
                 else {
-                    List<String> filteredItems = new ArrayList<>();
+                    List<String> filteredItems = new LinkedList<>();
                     for (String item : listForSearch)
                         if (item.toLowerCase().contains(currentText.toString().toLowerCase()))
                             filteredItems.add(item);
@@ -108,10 +107,8 @@ implements Iterable<T>, Filterable {
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
                         | ItemTouchHelper.RIGHT) {
                     @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i) {
-                        int position = viewHolder.getAdapterPosition();
-                        removeItem(position);
-                    }
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i)
+                    { removeItem(viewHolder.getAdapterPosition()); }
 
                     @Override
                     public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
