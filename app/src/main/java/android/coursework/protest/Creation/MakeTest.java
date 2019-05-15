@@ -14,13 +14,15 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.coursework.protest.R;
-import android.util.Log;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -45,6 +47,7 @@ public class MakeTest extends AppCompatActivity {
     private LinkedList<String> availableTags;
     private LinkedList<String> selectedTags;
     FirebaseUser user;
+    FirebaseFirestore db;
 
     private Resources appResources;
     private RecyclerView questionsView;
@@ -68,6 +71,7 @@ public class MakeTest extends AppCompatActivity {
         selectedTags = new LinkedList<>();
         availableTags = new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
         user = FirebaseAuth.getInstance().getCurrentUser();
+        db = FirebaseFirestore.getInstance();
 
         rootLayout = findViewById(R.id.create_test_root_layout);
         titleInput = findViewById(R.id.title_input);
@@ -83,7 +87,7 @@ public class MakeTest extends AppCompatActivity {
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
             if (!inputsOk()) return;
-
+            loadTestIntoDB();
         });
 
         findViewById(R.id.add_question_button).setOnClickListener(button -> {
@@ -146,6 +150,7 @@ public class MakeTest extends AppCompatActivity {
         tagsSuggestionsView.setLayoutManager(new LinearLayoutManager(this));
         tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
             tagsSuggestionsView.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
+        tagsSearchView.setQueryHint(appResources.getString(R.string.add_tags));
 
         SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         tagsSearchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
@@ -166,7 +171,7 @@ public class MakeTest extends AppCompatActivity {
         tagsSuggestionsView.requestLayout();
     }
 
-    private Map<String, Object> buildTest() {
+    private void loadTestIntoDB() {
         Map<String, Object> testDbEntry= new HashMap<>();
         testDbEntry.put("questions", questions);
         testDbEntry.put("creationTime", new Timestamp(new Date().getTime()));
@@ -177,11 +182,15 @@ public class MakeTest extends AppCompatActivity {
         testDbEntry.put("tags", selectedTags);
         testDbEntry.put("authorNickname", user.getDisplayName());
         testDbEntry.put("authorId", user.getUid());
-        return testDbEntry;
-    }
 
-    private void loadTestIntoDB() {
-
+        db.collection("tests")
+            .add(testDbEntry)
+            .addOnSuccessListener(documentReference ->
+                Toast.makeText(getApplicationContext(),
+                    appResources.getString(R.string.test_added), Toast.LENGTH_SHORT).show())
+            .addOnFailureListener(exception ->
+                    Toast.makeText(getApplicationContext(),
+                            exception.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private boolean inputsOk() {

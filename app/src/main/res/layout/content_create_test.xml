@@ -72,6 +72,7 @@
         android:layout_marginEnd="8dp"
         android:elevation="5dp"
         android:queryHint="@string/add_tags"
+        app:iconifiedByDefault="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/test_description_layout" />

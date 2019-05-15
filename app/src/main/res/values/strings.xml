@@ -37,6 +37,7 @@
     <string name="privacy_switch_prompt_on">Закрытый: доступ только по паролю, доступному после заврешения создания</string>
     <string name="add_tags">Добавить теги</string>
     <string name="tag_added">тег добавлен</string>
+    <string name="test_added">тест загружен в базу данных</string>
 
 
     <string-array name="tags">
@@ -44,5 +45,7 @@
         <item>физика</item>
         <item>программирование</item>
         <item>биология</item>
+        <item>информатика</item>
+        <item>география</item>
     </string-array>
 </resources>
