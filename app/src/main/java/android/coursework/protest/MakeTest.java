@@ -1,4 +1,4 @@
-package android.coursework.protest.Creation;
+package android.coursework.protest;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -13,15 +13,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.coursework.protest.R;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
@@ -46,8 +43,8 @@ public class MakeTest extends AppCompatActivity {
     private GenericRecyclerAdapter<String> tagsAdapter;
     private LinkedList<String> availableTags;
     private LinkedList<String> selectedTags;
-    FirebaseUser user;
-    FirebaseFirestore db;
+    private FirebaseUser firebaseUser;
+    private FirebaseFirestore db;
 
     private Resources appResources;
     private RecyclerView questionsView;
@@ -60,7 +57,6 @@ public class MakeTest extends AppCompatActivity {
     private TextInputEditText descriptionInput;
 
     final int CREATE_QUESTION_REQUEST_CODE = 1;
-    final String DEFAULT_PUBLIC_ACCESS_KEY = "11111111";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +66,7 @@ public class MakeTest extends AppCompatActivity {
         questions = new HashMap<>();
         selectedTags = new LinkedList<>();
         availableTags = new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
-        user = FirebaseAuth.getInstance().getCurrentUser();
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
 
         rootLayout = findViewById(R.id.create_test_root_layout);
@@ -123,7 +119,7 @@ public class MakeTest extends AppCompatActivity {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 String question = collection.get(position).getKey();
-                holder.visibleText.setText(question);
+                holder.primaryText.setText(question);
             }
         };
         questionsAdapter.ITEMS_LIMIT = appResources.getInteger(R.integer.max_questions_amount);
@@ -134,7 +130,7 @@ public class MakeTest extends AppCompatActivity {
         tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position)
-                { holder.visibleText.setText(collection.get(position)); }
+                { holder.primaryText.setText(collection.get(position)); }
 
             @Override
             void onClickListener(View view, int itemPosition) {
@@ -151,9 +147,9 @@ public class MakeTest extends AppCompatActivity {
         tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
             tagsSuggestionsView.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
         tagsSearchView.setQueryHint(appResources.getString(R.string.add_tags));
-
         SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         tagsSearchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+
         tagsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -172,16 +168,15 @@ public class MakeTest extends AppCompatActivity {
     }
 
     private void loadTestIntoDB() {
-        Map<String, Object> testDbEntry= new HashMap<>();
-        testDbEntry.put("questions", questions);
-        testDbEntry.put("creationTime", new Timestamp(new Date().getTime()));
-        testDbEntry.put("isPrivate", privacySwitch.isChecked());
-        testDbEntry.put("accessKey", DEFAULT_PUBLIC_ACCESS_KEY.hashCode());
-        testDbEntry.put("title", titleInput.getText().toString());
-        testDbEntry.put("description", descriptionInput.getText().toString());
-        testDbEntry.put("tags", selectedTags);
-        testDbEntry.put("authorNickname", user.getDisplayName());
-        testDbEntry.put("authorId", user.getUid());
+        MyTest testDbEntry = new MyTest(questions,
+                new Timestamp(new Date().getTime()),
+                privacySwitch.isChecked(),
+                appResources.getString(R.string.public_access_key).hashCode(),
+                titleInput.getText().toString(),
+                descriptionInput.getText().toString(),
+                selectedTags,
+                firebaseUser.getDisplayName(),
+                firebaseUser.getUid());
 
         db.collection("tests")
             .add(testDbEntry)

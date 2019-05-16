@@ -1,6 +1,5 @@
-package android.coursework.protest.Creation;
+package android.coursework.protest;
 
-import android.coursework.protest.R;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -29,17 +28,23 @@ implements Iterable<T>, Filterable {
 
     /**
      * Шаблон элемента прокручиваемого списка. Прикрепляет к нему обработчик нажатия.
-     * Позволяет использовать заново уже созданные элементы прокручиваемого списка, изменяя их
-     * содержимое в соответствии с отображаемой коллекцией. Тем самым экономит ресурсы.
+     * В рамках данного приложения в одном элементе может быть два текстовых поля (но не более),
+     * потому имеется второй конструктор для этого случая.
      */
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView visibleText;
+        TextView primaryText;
+        TextView secondaryText;
 
         ViewHolder(View itemView, int textViewId) {
             super(itemView);
-            visibleText = itemView.findViewById(textViewId);
+            primaryText = itemView.findViewById(textViewId);
             itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
+        }
+
+        ViewHolder(View itemView, int primaryTextViewId, int secondaryTextViewId) {
+            this(itemView, primaryTextViewId);
+            secondaryText = itemView.findViewById(secondaryTextViewId);
         }
     }
 
@@ -64,6 +69,13 @@ implements Iterable<T>, Filterable {
     abstract public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position);
 
     /**
+     * Этот метод потребуется переопределить в случае, если в элементе списка более одного
+     * текстового поля
+     */
+    ViewHolder makeViewHolder(View inflatedView)
+        { return new ViewHolder(inflatedView, TEXT_VIEW_ID); }
+
+    /**
      * Переопределив этот метод, можно задать обработчик нажатия на элемент списка. По умолчанию
      * он ничего не делает, игнорируя нажатия
      * @param view - ссылка на графическое представление элемента списка
@@ -71,7 +83,26 @@ implements Iterable<T>, Filterable {
      */
     void onClickListener(View view, int adapterPosition) { }
 
-    void setListForSearch(LinkedList<String> list) { listForSearch = list; }
+    /**
+     * Добавляет прокручиваемым спискам возможность удаления элементов свайпом.
+     */
+    void attachDeleteOnSwipeTo(RecyclerView view, AppCompatActivity context) {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
+                        | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i)
+                    { removeItem(viewHolder.getAdapterPosition()); }
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
+                                          RecyclerView.ViewHolder target)
+                    { return false; }
+                });
+        view.setAdapter(this);
+        view.setLayoutManager(new LinearLayoutManager(context));
+        itemTouchHelper.attachToRecyclerView(view);
+    }
 
     @Override
     public Filter getFilter() {
@@ -99,32 +130,11 @@ implements Iterable<T>, Filterable {
         };
     }
 
-    /**
-     * Добавляет прокручиваемым спискам возможность удаления элементов свайпом.
-     */
-    void attachDeleteOnSwipeTo(RecyclerView view, AppCompatActivity context) {
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
-                        | ItemTouchHelper.RIGHT) {
-                    @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i)
-                    { removeItem(viewHolder.getAdapterPosition()); }
-
-                    @Override
-                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                                          RecyclerView.ViewHolder target)
-                    { return false; }
-                });
-        view.setAdapter(this);
-        view.setLayoutManager(new LinearLayoutManager(context));
-        itemTouchHelper.attachToRecyclerView(view);
-    }
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(VIEW_LAYOUT, viewGroup, false);
-        return new ViewHolder(view, TEXT_VIEW_ID);
+        return makeViewHolder(view);
     }
 
     @Override
@@ -164,6 +174,8 @@ implements Iterable<T>, Filterable {
         TEXT_VIEW_ID = textViewId;
         VIEW_LAYOUT = rowViewLayout;
     }
+
+    void setListForSearch(LinkedList<String> list) { listForSearch = list; }
 
     public Iterator<T> iterator()
         { return Collections.unmodifiableList(collection).iterator(); }

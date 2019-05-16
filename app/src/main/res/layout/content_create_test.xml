@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".Creation.MakeTest"
+    tools:context=".MakeTest"
     tools:showIn="@layout/activity_create_test">
 
     <android.support.v7.widget.RecyclerView

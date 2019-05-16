@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".Creation.MakeQuestion"
+    tools:context=".MakeQuestion"
     tools:showIn="@layout/activity_create_question">
 
     <android.support.design.widget.TextInputLayout

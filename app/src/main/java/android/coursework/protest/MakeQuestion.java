@@ -1,8 +1,7 @@
-package android.coursework.protest.Creation;
+package android.coursework.protest;
 
 import android.content.Intent;
 import android.content.res.Resources;
-import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
@@ -85,7 +84,7 @@ public class MakeQuestion extends AppCompatActivity {
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder viewHolder,
                     int position) {
                 String question = collection.get(position).getKey();
-                viewHolder.visibleText.setText(question);
+                viewHolder.primaryText.setText(question);
             }
 
             @Override

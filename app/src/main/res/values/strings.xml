@@ -38,6 +38,7 @@
     <string name="add_tags">Добавить теги</string>
     <string name="tag_added">тег добавлен</string>
     <string name="test_added">тест загружен в базу данных</string>
+    <string name="public_access_key">abcdefg</string>
 
 
     <string-array name="tags">

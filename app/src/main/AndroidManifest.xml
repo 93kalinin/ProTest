@@ -9,11 +9,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".Creation.MakeTest"
+            android:name=".MakeTest"
             android:label="@string/title_activity_create_test"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
-            android:name=".Creation.MakeQuestion"
+            android:name=".MakeQuestion"
             android:label="@string/title_activity_create_question"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Browsing.Browse"
+            android:name=".Browse"
             android:screenOrientation="portrait" />
     </application>
 
