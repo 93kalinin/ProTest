@@ -23,6 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class MakeTest extends AppCompatActivity {
     private GenericRecyclerAdapter<SimpleEntry<String, Map<String, Boolean>>> questionsAdapter;
     private GenericRecyclerAdapter<String> tagsAdapter;
     private LinkedList<String> availableTags;
-    private LinkedList<String> selectedTags;
+    private ArrayList<String> selectedTags;
     private FirebaseUser firebaseUser;
     private FirebaseFirestore db;
 
@@ -64,7 +65,7 @@ public class MakeTest extends AppCompatActivity {
         setContentView(R.layout.activity_create_test);
         appResources = getResources();
         questions = new HashMap<>();
-        selectedTags = new LinkedList<>();
+        selectedTags = new ArrayList<>();
         availableTags = new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
@@ -127,7 +128,13 @@ public class MakeTest extends AppCompatActivity {
     }
 
     private void setUpTagsSearch() {
-        tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {
+        tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {{
+            collection = availableTags;
+            notifyDataSetChanged();
+            VIEW_LAYOUT = R.layout.simple_row;
+            TEXT_VIEW_ID = R.id.simple_row_text;
+            }
+
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position)
                 { holder.primaryText.setText(collection.get(position)); }
@@ -140,8 +147,6 @@ public class MakeTest extends AppCompatActivity {
                         .show();
                 }
             };
-        tagsAdapter.setListForSearch(availableTags);
-        tagsAdapter.setRowView(R.id.simple_row_text, R.layout.simple_row);
         tagsSuggestionsView.setAdapter(tagsAdapter);
         tagsSuggestionsView.setLayoutManager(new LinearLayoutManager(this));
         tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
@@ -169,7 +174,7 @@ public class MakeTest extends AppCompatActivity {
 
     private void loadTestIntoDB() {
         MyTest testDbEntry = new MyTest(questions,
-                new Timestamp(new Date().getTime()),
+                new Date(),
                 privacySwitch.isChecked(),
                 appResources.getString(R.string.public_access_key).hashCode(),
                 titleInput.getText().toString(),

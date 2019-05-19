@@ -39,6 +39,7 @@ implements Iterable<T>, Filterable {
         ViewHolder(View itemView, int textViewId) {
             super(itemView);
             primaryText = itemView.findViewById(textViewId);
+            if (primaryText == null) throw new RuntimeException("FAK");
             itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
         }
 
@@ -49,12 +50,11 @@ implements Iterable<T>, Filterable {
     }
 
     LinkedList<T> collection = new LinkedList<>();
-    private LinkedList<String> listForSearch;
     private final ConstraintLayout rootLayout;
     private T lastDeleted;
     private int lastPosition;
-    private int TEXT_VIEW_ID = R.id.generic_card_text;
-    private int VIEW_LAYOUT = R.layout.generic_card;
+    int TEXT_VIEW_ID = R.id.generic_card_text;
+    int VIEW_LAYOUT = R.layout.generic_card;
     int ITEMS_LIMIT = Integer.MAX_VALUE;
 
     GenericRecyclerAdapter(ConstraintLayout rootLayout) { this.rootLayout = rootLayout; }
@@ -106,17 +106,15 @@ implements Iterable<T>, Filterable {
 
     @Override
     public Filter getFilter() {
-        if (listForSearch == null)
-            throw new IllegalStateException("The list for searching in it is not set");
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence currentText) {
                 if (currentText.length() == 0)
-                    return new FilterResults() {{ values = listForSearch; }};
+                    return new FilterResults() {{ values = collection; }};
                 else {
-                    List<String> filteredItems = new LinkedList<>();
-                    for (String item : listForSearch)
-                        if (item.toLowerCase().contains(currentText.toString().toLowerCase()))
+                    List<T> filteredItems = new LinkedList<>();
+                    for (T item : collection)
+                        if (item.toString().toLowerCase().contains(currentText.toString().toLowerCase()))
                             filteredItems.add(item);
                     return new FilterResults() {{ values = filteredItems; }};
                 }
@@ -169,13 +167,6 @@ implements Iterable<T>, Filterable {
                 })
                 .show();
     }
-
-    void setRowView(int textViewId, int rowViewLayout) {
-        TEXT_VIEW_ID = textViewId;
-        VIEW_LAYOUT = rowViewLayout;
-    }
-
-    void setListForSearch(LinkedList<String> list) { listForSearch = list; }
 
     public Iterator<T> iterator()
         { return Collections.unmodifiableList(collection).iterator(); }

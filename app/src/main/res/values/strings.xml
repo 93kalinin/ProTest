@@ -39,6 +39,7 @@
     <string name="tag_added">тег добавлен</string>
     <string name="test_added">тест загружен в базу данных</string>
     <string name="public_access_key">abcdefg</string>
+    <string name="pass_test">пройти тест</string>
 
 
     <string-array name="tags">
@@ -49,4 +50,5 @@
         <item>информатика</item>
         <item>география</item>
     </string-array>
+    <string name="title_activity_pass_test">PassTest</string>
 </resources>
