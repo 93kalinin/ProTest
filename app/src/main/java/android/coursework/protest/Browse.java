@@ -15,6 +15,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -73,15 +76,16 @@ public class Browse extends AppCompatActivity {
                 { return new ViewHolder(inflatedView, R.id.test_title, R.id.test_tags); }
 
             @Override
-            void onClickListener(View view, int adapterPosition) {
+            void onClickListener(View testCardView, int adapterPosition) {
+                TextView testDescription = testCardView.findViewById(R.id.test_description);
+                Button passTestButton = testCardView.findViewById(R.id.pass_test_button);
                 MyTest selectedTest = collection.get(adapterPosition);
-                new AlertDialog.Builder(getApplicationContext())
-                        .setMessage(selectedTest.getDescription())
-                        .setCancelable(true)
-                        .setPositiveButton(R.string.pass_test, (dialog, id) ->
-                                startActivity(new Intent(getApplication(), PassTest.class)))
-                        .create()
-                        .show();
+
+                testDescription.setText(selectedTest.getDescription());
+                passTestButton.setOnClickListener(button ->
+                    startActivity(new Intent(getApplication(), PassTest.class)));
+                testDescription.setVisibility(View.VISIBLE);
+                passTestButton.setVisibility(View.VISIBLE);
             }
         };
 
