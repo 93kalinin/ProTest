@@ -1,5 +1,7 @@
 package android.coursework.protest;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -14,9 +16,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseUser;
@@ -24,13 +31,18 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+/*
+ * Отвечает за просмотр списка доступных для прохождения тестов и поиск.
+ * Поле retreivedTests содержит словарь, сопоставляющий тесту его id в FirestoreDB.
+ */
 public class Browse extends AppCompatActivity {
 
     private GenericRecyclerAdapter<MyTest> testsAdapter;
-    private LinkedList<MyTest> retreivedTests;
+    private HashMap<MyTest, String> retreivedTests;
     private RecyclerView testsRecycler;
     private Resources appResources;
     private ConstraintLayout rootLayout;
@@ -45,35 +57,54 @@ public class Browse extends AppCompatActivity {
         testsRecycler = findViewById(R.id.tests_recycler);
         db = FirebaseFirestore.getInstance();
         rootLayout = findViewById(R.id.browse_tests_root_layout);
-        retreivedTests = new LinkedList<>();
+        retreivedTests = new HashMap<>();
 
         db.collection("tests")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (DocumentSnapshot test : querySnapshot)
-                        retreivedTests.add(test.toObject(MyTest.class));
+                        retreivedTests.put(test.toObject(MyTest.class), test.getId());
                     setUpTestsRecycler();
                 });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.browse_dashboard, menu);
+        SearchView searchView = (SearchView) menu.findItem(R.id.tests_search).getActionView();
+        setUpSerach(searchView);
+        return true;
+    }
+
     private void setUpTestsRecycler() {
-        testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {{
-            VIEW_LAYOUT = R.layout.test_card;
-            collection = retreivedTests;
-            notifyDataSetChanged();
+        testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
+            { collection = new LinkedList<>(retreivedTests.keySet()); }   // notifyDataSetChanged?
+
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+                View inflatedView = LayoutInflater.from(viewGroup.getContext())
+                        .inflate(VIEW_LAYOUT, viewGroup, false);
+                return new ViewHolder(inflatedView, R.id.test_title, R.id.test_id,
+                        R.id.test_description, R.id.test_tags);
             }
 
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
-                String testTitle = collection.get(position).getTitle();
-                List<String> testTags = collection.get(position).getTags();
-                holder.primaryText.setText(testTitle);
-                holder.secondaryText.setText(TextUtils.join(" | ", testTags));
-            }
+                MyTest test = collection.get(position);
+                String testTitle = test.getTitle();
+                String testId = retreivedTests.get(test);
+                List<String> testTags = test.getTags();
+                TextView titleView = (TextView) holder.textViews.get(0);
+                TextView idView = (TextView) holder.textViews.get(1);
+                TextView descriptionView = (TextView) holder.textViews.get(2);
+                TextView tagsView = (TextView) holder.textViews.get(3);
 
-            @Override
-            ViewHolder makeViewHolder(View inflatedView)
-                { return new ViewHolder(inflatedView, R.id.test_title, R.id.test_tags); }
+                titleView.setText(testTitle);
+                idView.setText(testId);
+                descriptionView.setText(test.getDescription());
+                tagsView.setText(TextUtils.join(" | ", testTags));
+            }
 
             @Override
             void onClickListener(View testCardView, int adapterPosition) {
@@ -81,16 +112,33 @@ public class Browse extends AppCompatActivity {
                 Button passTestButton = testCardView.findViewById(R.id.pass_test_button);
                 MyTest selectedTest = collection.get(adapterPosition);
 
-                testDescription.setText(selectedTest.getDescription());
-                passTestButton.setOnClickListener(button ->
-                    startActivity(new Intent(getApplication(), PassTest.class)));
-                testDescription.setVisibility(View.VISIBLE);
-                passTestButton.setVisibility(View.VISIBLE);
+                int newVisibility = (testCardView.getVisibility() == View.VISIBLE) ?
+                    View.GONE : View.VISIBLE;
+                Intent testPassIntent = new Intent(getApplication(), PassTest.class);
+                testPassIntent.putExtra("test", selectedTest);
+
+                passTestButton.setOnClickListener(button -> startActivity(testPassIntent));
+                testDescription.setVisibility(newVisibility);
+                passTestButton.setVisibility(newVisibility);
             }
         };
-
+        testsAdapter.VIEW_LAYOUT = R.layout.test_card;
         testsRecycler.setAdapter(testsAdapter);
         testsRecycler.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private void setUpSerach(SearchView testsSearchView) {
+        testsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query)
+                { return false; }
+
+            @Override
+            public boolean onQueryTextChange(String query) {
+                testsAdapter.getFilter().filter(query);
+                return false;
+            }
+        });
     }
 
     private boolean error(String message) {

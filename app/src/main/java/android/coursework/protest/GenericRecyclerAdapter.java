@@ -13,6 +13,7 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -28,34 +29,29 @@ implements Iterable<T>, Filterable {
 
     /**
      * Шаблон элемента прокручиваемого списка. Прикрепляет к нему обработчик нажатия.
-     * В рамках данного приложения в одном элементе может быть два текстовых поля (но не более),
-     * потому имеется второй конструктор для этого случая.
+     * Может содержать несколько текстовых полей
      */
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        TextView primaryText;
-        TextView secondaryText;
+        ArrayList<TextView> textViews = new ArrayList<>();
 
-        ViewHolder(View itemView, int textViewId) {
+        ViewHolder(View itemView, int... textViewIds) {
             super(itemView);
-            primaryText = itemView.findViewById(textViewId);
-            if (primaryText == null) throw new RuntimeException("FAK");
+            for (int id : textViewIds)
+                textViews.add(itemView.findViewById(id));
             itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
-        }
-
-        ViewHolder(View itemView, int primaryTextViewId, int secondaryTextViewId) {
-            this(itemView, primaryTextViewId);
-            secondaryText = itemView.findViewById(secondaryTextViewId);
         }
     }
 
     LinkedList<T> collection = new LinkedList<>();
+    private LinkedList<T> backup;
+    private boolean originalBackup = true;
     private final ConstraintLayout rootLayout;
     private T lastDeleted;
     private int lastPosition;
-    int TEXT_VIEW_ID = R.id.generic_card_text;
-    int VIEW_LAYOUT = R.layout.generic_card;
-    int ITEMS_LIMIT = Integer.MAX_VALUE;
+    int TEXT_VIEW_ID = R.id.generic_card_text;    // id текстового поля элемента по умолчанию
+    int VIEW_LAYOUT = R.layout.generic_card;    // внешний вид элемента списка по умолчанию
+    int ITEMS_LIMIT = Integer.MAX_VALUE;    // предельно допустимое число элементов по умолчанию
 
     GenericRecyclerAdapter(ConstraintLayout rootLayout) { this.rootLayout = rootLayout; }
 
@@ -67,13 +63,6 @@ implements Iterable<T>, Filterable {
      */
     @Override
     abstract public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position);
-
-    /**
-     * Этот метод потребуется переопределить в случае, если в элементе списка более одного
-     * текстового поля
-     */
-    ViewHolder makeViewHolder(View inflatedView)
-        { return new ViewHolder(inflatedView, TEXT_VIEW_ID); }
 
     /**
      * Переопределив этот метод, можно задать обработчик нажатия на элемент списка. По умолчанию
@@ -104,13 +93,32 @@ implements Iterable<T>, Filterable {
         itemTouchHelper.attachToRecyclerView(view);
     }
 
+
+    /**
+     * Этот метод потребуется переопределить в случае, если в элементе списка более одного
+     * текстового поля. Id этих полей нужно будет передать конструктору ViewHolder для регистрации
+     */
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+        View inflatedView = LayoutInflater.from(viewGroup.getContext())
+                .inflate(VIEW_LAYOUT, viewGroup, false);
+        return new ViewHolder(inflatedView, TEXT_VIEW_ID);
+    }
+
+    /*
+     * Отвечает за реализацию поиска. Подменяет ссылку на коллекцию всех элементов списка
+     * ссылкой на коллекцию только тех элементов, которые удовлетворяют критериям поиска.
+     * Для того, чтобы ссылка на исходную коллекцию не была при этом утрачена, использует метод
+     * setCollectionState.
+     */
     @Override
     public Filter getFilter() {
+        setCollectionState();
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence currentText) {
                 if (currentText.length() == 0)
-                    return new FilterResults() {{ values = collection; }};
+                    return new FilterResults() {{ values = backup; }};
                 else {
                     List<T> filteredItems = new LinkedList<>();
                     for (T item : collection)
@@ -129,14 +137,18 @@ implements Iterable<T>, Filterable {
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-        View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(VIEW_LAYOUT, viewGroup, false);
-        return makeViewHolder(view);
-    }
-
-    @Override
     public int getItemCount() { return collection.size(); }
+
+    /**
+     * Сохраняет ссылку на коллекцию или восстанавливает её исходное состояние.
+     */
+    private void setCollectionState() {
+        if (originalBackup) {
+            backup = collection;
+            originalBackup = false;
+        }
+        else collection = backup;
+    }
 
     void addItem(T item) {
         if (collection.size() >= ITEMS_LIMIT) {
@@ -149,7 +161,7 @@ implements Iterable<T>, Filterable {
         notifyDataSetChanged();
     }
 
-    void removeItem(int position) {
+    private void removeItem(int position) {
         lastDeleted = collection.get(position);
         lastPosition = position;
         collection.remove(position);

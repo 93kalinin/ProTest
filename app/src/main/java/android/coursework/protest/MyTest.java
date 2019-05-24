@@ -1,15 +1,15 @@
 package android.coursework.protest;
 
-import java.sql.Timestamp;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.Map;
 
-/**
- * Публичный конструктор и геттеры необходимы для хранения объектов в FirestoreDB
+/*
+ * Публичный конструктор без параметров и геттеры для каждого поля необходимы для хранения
+ * экземпляров этого класса в FirestoreDB.
  */
-class MyTest {
+class MyTest implements Serializable {
 
     private Map<String, Map<String, Boolean>> questions;
     private Date creationTime;
@@ -36,6 +36,9 @@ class MyTest {
         this.authorNickname = authorNickname;
         this.authorId = authorId;
     }
+
+    @Override
+    public String toString() { return title; }
 
     public Map<String, Map<String, Boolean>> getQuestions() { return questions; }
     public Date getCreationTime() { return creationTime; }

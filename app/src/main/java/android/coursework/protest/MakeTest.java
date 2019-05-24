@@ -15,6 +15,7 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -22,7 +23,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -32,10 +32,10 @@ import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
 
-/**
- * Отвечает за создание тестов. Вопросы хранятся в поле questions, где каждому вопросу
+/*
+ * Вопросы хранятся в поле questions, где каждому вопросу
  * сопоставляется набор вариантов ответа, каждому из которых в свою очередь сопоставляется
- * верность/ложность.
+ * истинность/ложность -- Map<String, Map<String, Boolean>>
  */
 public class MakeTest extends AppCompatActivity {
 
@@ -120,7 +120,8 @@ public class MakeTest extends AppCompatActivity {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 String question = collection.get(position).getKey();
-                holder.primaryText.setText(question);
+                TextView view = (TextView) holder.textViews.get(0);
+                view.setText(question);
             }
         };
         questionsAdapter.ITEMS_LIMIT = appResources.getInteger(R.integer.max_questions_amount);
@@ -128,16 +129,15 @@ public class MakeTest extends AppCompatActivity {
     }
 
     private void setUpTagsSearch() {
-        tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {{
-            collection = availableTags;
-            notifyDataSetChanged();
-            VIEW_LAYOUT = R.layout.simple_row;
-            TEXT_VIEW_ID = R.id.simple_row_text;
-            }
+        tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {
+            { collection = availableTags; }    // notifyDatasetChanged?
 
             @Override
-            public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position)
-                { holder.primaryText.setText(collection.get(position)); }
+            public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
+                String question = collection.get(position);
+                TextView view = (TextView) holder.textViews.get(0);
+                view.setText(question);
+            }
 
             @Override
             void onClickListener(View view, int itemPosition) {
@@ -147,20 +147,18 @@ public class MakeTest extends AppCompatActivity {
                         .show();
                 }
             };
+        tagsAdapter.VIEW_LAYOUT = R.layout.simple_row;
+        tagsAdapter.TEXT_VIEW_ID = R.id.simple_row_text;
         tagsSuggestionsView.setAdapter(tagsAdapter);
         tagsSuggestionsView.setLayoutManager(new LinearLayoutManager(this));
         tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
             tagsSuggestionsView.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
         tagsSearchView.setQueryHint(appResources.getString(R.string.add_tags));
-        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        tagsSearchView.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
-
+        //request system service search?
         tagsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                tagsAdapter.getFilter().filter(query);
-                return false;
-            }
+            public boolean onQueryTextSubmit(String query)
+                { return false; }
 
             @Override
             public boolean onQueryTextChange(String query) {

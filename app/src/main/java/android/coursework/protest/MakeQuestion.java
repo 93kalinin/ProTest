@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.TextView;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import static java.util.AbstractMap.SimpleEntry;
 
 /**
  * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers). Каждому
- * варианту ответа сопоставляется его верность/ложность
+ * варианту ответа сопоставляется его истинность/ложность
  */
 public class MakeQuestion extends AppCompatActivity {
 
@@ -50,7 +51,7 @@ public class MakeQuestion extends AppCompatActivity {
         setUpRecyclerView();
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
-            if (invalidInputs()) return;
+            if (!inputsOk()) return;
             activityResult.putExtra("question", questionInput.getText().toString());
             activityResult.putExtra("answers", (Serializable) answers);
             setResult(RESULT_OK, activityResult);
@@ -72,19 +73,19 @@ public class MakeQuestion extends AppCompatActivity {
         });
     }
 
-    /**
+    /*
      * Инициализирует адаптер, организующий работу с прокручиваемым списком вариантов ответа.
      * А именно, цепляет к элементам списка обработчик нажатий, помечающий вариант ответа как
-     * верный и отмечающий его в списке цветной полоской.
+     * верный и отмечающий его в списке цветной полоской. Адаптер содержит пары
+     * (вариант ответа : его истинность/ложность), откуда параметр SimpleEntry<String, Boolean>
      */
     private void setUpRecyclerView() {
         adapter = new GenericRecyclerAdapter<SimpleEntry<String, Boolean>>(rootLayout) {
-
             @Override
-            public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder viewHolder,
-                    int position) {
+            public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder,  int position) {
                 String question = collection.get(position).getKey();
-                viewHolder.primaryText.setText(question);
+                TextView view = (TextView) holder.textViews.get(0);
+                view.setText(question);
             }
 
             @Override
@@ -100,7 +101,7 @@ public class MakeQuestion extends AppCompatActivity {
         adapter.attachDeleteOnSwipeTo(answersView, this);
     }
 
-    private boolean invalidInputs() {
+    private boolean inputsOk() {
         answers = new HashMap<>();
         for (SimpleEntry<String, Boolean> answer : adapter)
             answers.put(answer.getKey(), answer.getValue());
@@ -117,12 +118,12 @@ public class MakeQuestion extends AppCompatActivity {
             return error(NO_RIGHT_ANSWERS_FOUND);
         if (questionInput.getText().length() < MIN_QUESTION_LENGTH)
             return error(QUESTION_TOO_SHORT + MIN_QUESTION_LENGTH);
-        return false;
+        return true;
     }
 
     boolean error(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
-        return true;
+        return false;
     }
 }
