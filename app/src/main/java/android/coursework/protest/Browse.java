@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.coursework.protest.R;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -26,6 +27,8 @@ import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -130,8 +133,13 @@ public class Browse extends AppCompatActivity {
     private void setUpSerach(SearchView testsSearchView) {
         testsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onQueryTextSubmit(String query)
-                { return false; }
+            public boolean onQueryTextSubmit(String query) {   // поиск по ID
+                db.collection("tests")
+                        .document(query)
+                        .get()
+                        .addOnCompleteListener(task -> idSearchHandler(task));
+                return false;
+            }
 
             @Override
             public boolean onQueryTextChange(String query) {
@@ -141,9 +149,19 @@ public class Browse extends AppCompatActivity {
         });
     }
 
-    private boolean error(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
+    /* Нужен для улучшения читаемости кода путем выноса его части в оделный метод */
+    private void idSearchHandler(Task<DocumentSnapshot> task) {
+        if (task.isSuccessful()) {
+            Snackbar.make(rootLayout, R.string.test_found, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.pass_test, view -> {
+                        MyTest test = task.getResult().toObject(MyTest.class);
+                        Intent testPassIntent = new Intent(getApplication(), PassTest.class);
+                        testPassIntent.putExtra("test", test);
+                        startActivity(testPassIntent);
+                    })
+                    .show();
+        }
+        else Snackbar.make(rootLayout, R.string.failed_to_find_test, Snackbar.LENGTH_SHORT)
                 .show();
-        return false;
     }
 }
