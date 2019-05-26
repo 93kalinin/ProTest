@@ -92,9 +92,8 @@ public class MakeQuestion extends AppCompatActivity {
             void onClickListener(View view, int itemPosition) {
                 SimpleEntry<String, Boolean> answer = collection.get(itemPosition);
                 answer.setValue(!answer.getValue());
-                if (answer.getValue())
-                    view.setBackgroundResource(R.drawable.line_for_selected_items);
-                else view.setBackgroundResource(R.drawable.gray_line);
+                view.setBackgroundResource(answer.getValue() ?
+                        R.drawable.line_for_selected_items : R.drawable.gray_line);
             }
         };
         adapter.ITEMS_LIMIT = appResources.getInteger(R.integer.max_answers_amount);

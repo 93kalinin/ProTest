@@ -130,7 +130,7 @@ public class MakeTest extends AppCompatActivity {
 
     private void setUpTagsSearch() {
         tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {
-            { collection = availableTags; }    // notifyDatasetChanged?
+            { collection = availableTags; }
 
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {

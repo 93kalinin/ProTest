@@ -44,7 +44,7 @@ class MyTest implements Serializable {
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
     public int getAccessKey() { return accessKey; }
-    public String getTitle() { if (title == null) throw new RuntimeException("FUCK!"); return title; }
+    public String getTitle() { return title; }
     public String getDescription() { return description; }
     public ArrayList<String> getTags() { return tags; }
     public String getAuthorNickname() { return authorNickname; }

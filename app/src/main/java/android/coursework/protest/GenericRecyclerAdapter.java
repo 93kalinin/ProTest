@@ -150,6 +150,9 @@ implements Iterable<T>, Filterable {
         else collection = backup;
     }
 
+    void clear()
+        { collection = new LinkedList<>(); }
+
     void addItem(T item) {
         if (collection.size() >= ITEMS_LIMIT) {
             Snackbar.make(rootLayout, R.string.limit_exceeded_error,

@@ -56,6 +56,7 @@ public class Browse extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browse);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         appResources = getResources();
         testsRecycler = findViewById(R.id.tests_recycler);
         db = FirebaseFirestore.getInstance();
@@ -82,7 +83,7 @@ public class Browse extends AppCompatActivity {
 
     private void setUpTestsRecycler() {
         testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
-            { collection = new LinkedList<>(retreivedTests.keySet()); }   // notifyDataSetChanged?
+            { collection = new LinkedList<>(retreivedTests.keySet()); }
 
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -104,7 +105,7 @@ public class Browse extends AppCompatActivity {
                 TextView tagsView = (TextView) holder.textViews.get(3);
 
                 titleView.setText(testTitle);
-                idView.setText(testId);
+                idView.setText("ID: " + testId);
                 descriptionView.setText(test.getDescription());
                 tagsView.setText(TextUtils.join(" | ", testTags));
             }
@@ -113,9 +114,10 @@ public class Browse extends AppCompatActivity {
             void onClickListener(View testCardView, int adapterPosition) {
                 TextView testDescription = testCardView.findViewById(R.id.test_description);
                 Button passTestButton = testCardView.findViewById(R.id.pass_test_button);
+                TextView idTextView = testCardView.findViewById(R.id.test_id);
                 MyTest selectedTest = collection.get(adapterPosition);
 
-                int newVisibility = (testCardView.getVisibility() == View.VISIBLE) ?
+                int newVisibility = (passTestButton.getVisibility() == View.VISIBLE) ?
                     View.GONE : View.VISIBLE;
                 Intent testPassIntent = new Intent(getApplication(), PassTest.class);
                 testPassIntent.putExtra("test", selectedTest);
@@ -123,6 +125,7 @@ public class Browse extends AppCompatActivity {
                 passTestButton.setOnClickListener(button -> startActivity(testPassIntent));
                 testDescription.setVisibility(newVisibility);
                 passTestButton.setVisibility(newVisibility);
+                idTextView.setVisibility(newVisibility);
             }
         };
         testsAdapter.VIEW_LAYOUT = R.layout.test_card;
