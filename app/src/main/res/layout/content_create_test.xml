@@ -9,6 +9,21 @@
     tools:context=".MakeTest"
     tools:showIn="@layout/activity_create_test">
 
+    <Switch
+        android:id="@+id/show_result_switch"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:checked="false"
+        android:gravity="start|center"
+        android:text="@string/hide_test_result"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/privacy_switch" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/tags_recycler_view"
         android:layout_width="match_parent"
@@ -95,9 +110,8 @@
         android:id="@+id/questions_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/add_question_button">
@@ -114,6 +128,6 @@
         android:text="@string/add_question_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/privacy_switch" />
+        app:layout_constraintTop_toBottomOf="@+id/show_result_switch" />
 
 </android.support.constraint.ConstraintLayout>

@@ -1,7 +1,5 @@
 package android.coursework.protest;
 
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -12,131 +10,62 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
-import static java.util.AbstractMap.SimpleEntry;
-
-/*
- * Вопросы хранятся в поле questions, где каждому вопросу
- * сопоставляется набор вариантов ответа, каждому из которых в свою очередь сопоставляется
- * истинность/ложность -- Map<String, Map<String, Boolean>>
- */
 public class MakeTest extends AppCompatActivity {
 
-    private Map<String, Map<String, Boolean>> questions;
-    private GenericRecyclerAdapter<SimpleEntry<String, Map<String, Boolean>>> questionsAdapter;
-    private GenericRecyclerAdapter<String> tagsAdapter;
-    private LinkedList<String> availableTags;
-    private ArrayList<String> selectedTags;
-    private FirebaseUser firebaseUser;
-    private FirebaseFirestore db;
-
-    private Resources appResources;
-    private RecyclerView questionsView;
-    private SearchView tagsSearchView;
-    private RecyclerView tagsSuggestionsView;
-    private ConstraintLayout rootLayout;
-    private Switch privacySwitch;
-    private Toolbar toolbar;
-    private TextInputEditText titleInput;
-    private TextInputEditText descriptionInput;
-
+    GenericRecyclerAdapter<Question> questionsAdapter;
     final int CREATE_QUESTION_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_test);
-        appResources = getResources();
-        questions = new HashMap<>();
-        selectedTags = new ArrayList<>();
-        availableTags = new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        db = FirebaseFirestore.getInstance();
+        Resources appResources = getResources();
+        ConstraintLayout rootLayout = findViewById(R.id.create_test_root_layout);
 
-        rootLayout = findViewById(R.id.create_test_root_layout);
-        titleInput = findViewById(R.id.title_input);
-        descriptionInput = findViewById(R.id.test_description_input);
-        questionsView = findViewById(R.id.questions_recycler_view);
-        tagsSearchView = findViewById(R.id.tags_search);
-        tagsSuggestionsView = findViewById(R.id.tags_recycler_view);
-        toolbar = findViewById(R.id.test_creation_toolbar);
-        privacySwitch = findViewById(R.id.privacy_switch);
-        setSupportActionBar(toolbar);
-        setUpQuestionsRecycler();
-        setUpTagsSearch();
-
-        findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
-            if (!inputsOk()) return;
-            loadTestIntoDB();
-        });
-
-        findViewById(R.id.add_question_button).setOnClickListener(button -> {
-            int MAX_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.max_questions_amount);
-            String TOO_MANY_QUESTIONS = appResources.getString(R.string.too_many_questions);
-
-            if (questions.size() >= MAX_QUESTIONS_AMOUNT) {
-                error(TOO_MANY_QUESTIONS + MAX_QUESTIONS_AMOUNT);
-                return;
-            }
-            Intent intent = new Intent(this, MakeQuestion.class);
-            startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
-        });
-
-        privacySwitch.setOnCheckedChangeListener((switch_, isChecked) -> {
-            if (isChecked) switch_.setText(R.string.privacy_switch_prompt_on);
-            else switch_.setText(R.string.privacy_switch_prompt_off);
-        });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  resultCode == RESULT_OK) {
-            String question = intent.getExtras().getString("question");
-            Serializable data = intent.getExtras().getSerializable("answers");
-            questionsAdapter.addItem(new SimpleEntry<>(question, (Map<String, Boolean>) data));
-        }
-    }
-
-    private void setUpQuestionsRecycler() {
-        questionsAdapter =
-                new GenericRecyclerAdapter<SimpleEntry<String, Map<String, Boolean>>>(rootLayout) {
+        /*
+        Определить questionsAdapter и questionsRecycler, отвечающие за хранение и отображение
+        вопросов, созданных пользователем.
+         */
+        RecyclerView questionsRecycler = findViewById(R.id.questions_recycler_view);
+        questionsAdapter = new GenericRecyclerAdapter<Question>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
-                String question = collection.get(position).getKey();
-                TextView view = (TextView) holder.textViews.get(0);
-                view.setText(question);
+                String question = collection.get(position).getQuestion();
+                holder.text.setText(question);
             }
         };
         questionsAdapter.ITEMS_LIMIT = appResources.getInteger(R.integer.max_questions_amount);
-        questionsAdapter.attachDeleteOnSwipeTo(questionsView, this);
-    }
+        questionsAdapter.attachDeleteOnSwipeTo(questionsRecycler);
+        questionsRecycler.setAdapter(questionsAdapter);
+        questionsRecycler.setLayoutManager(new LinearLayoutManager(this));
 
-    private void setUpTagsSearch() {
-        tagsAdapter = new GenericRecyclerAdapter<String>(rootLayout) {
-            { collection = availableTags; }
-
+        /*
+        Определить tagsAdapter и tagsRecycler, отвечающие за хранение и отображение тегов.
+        */
+        ArrayList<String> selectedTags = new ArrayList<>();
+        LinkedList<String> availableTags =
+            new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
+        SearchView tagsSearchView = findViewById(R.id.tags_search);
+        RecyclerView tagsRecycler = findViewById(R.id.tags_recycler_view);
+        GenericRecyclerAdapter<String> tagsAdapter =
+        new GenericRecyclerAdapter<String>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 String question = collection.get(position);
-                TextView view = (TextView) holder.textViews.get(0);
-                view.setText(question);
+                holder.text.setText(question);
             }
 
             @Override
@@ -145,16 +74,17 @@ public class MakeTest extends AppCompatActivity {
                 tagsSearchView.clearFocus();
                 Toast.makeText(getApplicationContext(), R.string.tag_added, Toast.LENGTH_SHORT)
                         .show();
-                }
-            };
+            }
+        };
+        tagsAdapter.collection = availableTags;    //TODO: загрузка из бд!
         tagsAdapter.VIEW_LAYOUT = R.layout.simple_row;
         tagsAdapter.TEXT_VIEW_ID = R.id.simple_row_text;
-        tagsSuggestionsView.setAdapter(tagsAdapter);
-        tagsSuggestionsView.setLayoutManager(new LinearLayoutManager(this));
+        tagsRecycler.setAdapter(tagsAdapter);
+        tagsRecycler.setLayoutManager(new LinearLayoutManager(this));
+
         tagsSearchView.setOnQueryTextFocusChangeListener((view, isInFocus) ->
-            tagsSuggestionsView.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
+                tagsRecycler.setVisibility(isInFocus ? View.VISIBLE : View.GONE));
         tagsSearchView.setQueryHint(appResources.getString(R.string.add_tags));
-        //request system service search?
         tagsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query)
@@ -166,55 +96,105 @@ public class MakeTest extends AppCompatActivity {
                 return false;
             }
         });
-        tagsSuggestionsView.bringToFront();
-        tagsSuggestionsView.requestLayout();
+        tagsRecycler.bringToFront();    //TODO: necessary?
+        tagsRecycler.requestLayout();
+
+        /*
+        Прикрепить обработчик нажатия переключателя уровня видимости теста (открытый/закрытый).
+        */
+        Switch privacySwitch = findViewById(R.id.privacy_switch);
+        privacySwitch.setOnCheckedChangeListener((switch_, isChecked) -> {
+            if (isChecked) switch_.setText(R.string.privacy_switch_prompt_on);
+            else switch_.setText(R.string.privacy_switch_prompt_off);
+        });
+
+        /*
+        Прикрепить обработчик нажатия переключателя отображения результата теста.
+        */
+        Switch resultIsVisibleSwitch = findViewById(R.id.show_result_switch);
+        resultIsVisibleSwitch.setOnCheckedChangeListener((switch_, isChecked) -> {
+            if (isChecked && privacySwitch.isChecked()) {
+                switch_.setChecked(false);
+                error(appResources.getString(R.string.visible_result_for_public_test));
+            }
+        });
+
+        /*
+        Прикрепить обработчик нажатия кнопки, отвечающей за завершение создания теста. Обработчик
+        проверяет на корректность все данные, относящиеся к созданному пользователем тесту и
+        загружает тест в базу данных.
+         */
+        TextInputEditText titleInput = findViewById(R.id.title_input);
+        TextInputEditText descriptionInput = findViewById(R.id.test_description_input);
+        FirebaseFirestore database = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        final int MIN_DESCRIPTION_LENGTH = appResources.getInteger(R.integer.min_description_length);
+        final int MIN_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.min_questions_amount);
+        final int MIN_TITLE_LENGTH = appResources.getInteger(R.integer.min_title_length);
+
+        findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
+            if (questionsAdapter.collection.size() < MIN_QUESTIONS_AMOUNT)
+                error(appResources.getString(R.string.too_few_questions));
+            else if (titleInput.getText().length() < MIN_TITLE_LENGTH)
+                error(appResources.getString(R.string.title_too_short));
+            else if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
+                error(appResources.getString(R.string.description_too_short));
+            else {
+                String accessKey = privacySwitch.isChecked() ?
+                    ((Integer) questionsAdapter.collection.hashCode()).toString()
+                    : appResources.getString(R.string.public_access_key);
+                MyTest newTest = new MyTest(
+                    questionsAdapter.collection,
+                    new Date(),
+                    privacySwitch.isChecked(),
+                    resultIsVisibleSwitch.isChecked(),
+                    accessKey,
+                    titleInput.getText().toString(),
+                    descriptionInput.getText().toString(),
+                    selectedTags,
+                    currentUser.getDisplayName(),
+                    currentUser.getUid());
+
+                database.collection("tests")
+                    .add(newTest)
+                    .addOnSuccessListener(documentReference ->
+                        Toast.makeText(getApplicationContext(),
+                                appResources.getString(R.string.test_added), Toast.LENGTH_SHORT)
+                            .show())
+                    .addOnFailureListener(exception ->
+                        Toast.makeText(getApplicationContext(), exception.getMessage(),
+                                Toast.LENGTH_SHORT)
+                            .show());
+            }
+        });
+
+        /*
+        Прикрепить обработчик нажатия кнопки, отвечающей за вызов экрана создания вопроса.
+        */
+        findViewById(R.id.add_question_button).setOnClickListener(button -> {
+            if (questionsAdapter.collection.size()
+                    >= appResources.getInteger(R.integer.max_questions_amount))
+                error(appResources.getString(R.string.too_many_questions));
+            else {
+                Intent intent = new Intent(this, MakeQuestion.class);
+                startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
+            }
+        });
     }
 
-    private void loadTestIntoDB() {
-        MyTest testDbEntry = new MyTest(questions,
-                new Date(),
-                privacySwitch.isChecked(),
-                appResources.getString(R.string.public_access_key).hashCode(),
-                titleInput.getText().toString(),
-                descriptionInput.getText().toString(),
-                selectedTags,
-                firebaseUser.getDisplayName(),
-                firebaseUser.getUid());
-
-        db.collection("tests")
-            .add(testDbEntry)
-            .addOnSuccessListener(documentReference ->
-                Toast.makeText(getApplicationContext(),
-                    appResources.getString(R.string.test_added), Toast.LENGTH_SHORT).show())
-            .addOnFailureListener(exception ->
-                    Toast.makeText(getApplicationContext(),
-                            exception.getMessage(), Toast.LENGTH_SHORT).show());
+    /*
+    Определить метод, принимающий возвращаемый экраном создания вопросов вопрос.
+    */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  resultCode == RESULT_OK) {
+            Question question = (Question) intent.getExtras().getSerializable("question");
+            questionsAdapter.addItem(question);
+        }
     }
 
-    private boolean inputsOk() {
-        questions = new HashMap<>();
-        for (SimpleEntry<String, Map<String, Boolean>> question : questionsAdapter)
-            questions.put(question.getKey(), question.getValue());
-
-        int MIN_DESCRIPTION_LENGTH = appResources.getInteger(R.integer.min_description_length);
-        int MIN_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.min_questions_amount);
-        int MIN_TITLE_LENGTH = appResources.getInteger(R.integer.min_title_length);
-        String DESCRIPTION_TOO_SHORT = appResources.getString(R.string.description_too_short);
-        String TOO_FEW_QUESTIONS = appResources.getString(R.string.too_few_questions);
-        String TITLE_TOO_SHORT = appResources.getString(R.string.title_too_short);
-
-        if (questions.size() < MIN_QUESTIONS_AMOUNT)
-            return error(TOO_FEW_QUESTIONS + MIN_QUESTIONS_AMOUNT);
-        if (titleInput.getText().length() < MIN_TITLE_LENGTH)
-            return error(TITLE_TOO_SHORT + MIN_TITLE_LENGTH);
-        if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
-            return error(DESCRIPTION_TOO_SHORT + MIN_DESCRIPTION_LENGTH);
-        return true;
-    }
-
-    private boolean error(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
+    private void error(String message) {
+        Snackbar.make(findViewById(R.id.create_question_root_layout), message, Snackbar.LENGTH_LONG)
                 .show();
-        return false;
     }
 }

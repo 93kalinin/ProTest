@@ -3,6 +3,7 @@ package android.coursework.protest;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -11,10 +12,11 @@ import java.util.Map;
  */
 class MyTest implements Serializable {
 
-    private Map<String, Map<String, Boolean>> questions;
+    private List<Question> questions;
     private Date creationTime;
     private boolean isPrivate;
-    private int accessKey;
+    private boolean visibleResult;
+    private String accessKey;
     private String title;
     private String description;
     private ArrayList<String> tags;
@@ -23,12 +25,13 @@ class MyTest implements Serializable {
 
     public MyTest() {}
 
-    MyTest(Map<String, Map<String, Boolean>> questions, Date creationTime,
-            boolean isPrivate, int accessKey, String title, String description,
-            ArrayList<String> tags, String authorNickname, String authorId) {
+    MyTest(List<Question> questions, Date creationTime, boolean isPrivate, boolean visibleResult,
+            String accessKey, String title, String description, ArrayList<String> tags,
+            String authorNickname, String authorId) {
         this.questions = questions;
         this.creationTime = creationTime;
         this.isPrivate = isPrivate;
+        this.visibleResult = visibleResult;
         this.accessKey = accessKey;
         this.title = title;
         this.description = description;
@@ -40,10 +43,11 @@ class MyTest implements Serializable {
     @Override
     public String toString() { return title; }
 
-    public Map<String, Map<String, Boolean>> getQuestions() { return questions; }
+    public List<Question> getQuestions() { return questions; }
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
-    public int getAccessKey() { return accessKey; }
+    public boolean getVisibleResult() { return visibleResult; }
+    public String getAccessKey() { return accessKey; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public ArrayList<String> getTags() { return tags; }

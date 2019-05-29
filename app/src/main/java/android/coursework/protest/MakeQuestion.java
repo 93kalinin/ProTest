@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.EditText;
 
 import static android.coursework.protest.Question.Answer;
 
@@ -70,23 +71,38 @@ public class MakeQuestion extends AppCompatActivity {
         возвращает вопрос Question в качестве результата работы данного экрана.
          */
         TextInputEditText questionInput = findViewById(R.id.question_input);
+        EditText sufficientAmountInput = findViewById(R.id.sufficient_amount);
         final int MIN_ANSWERS_AMOUNT = appResources.getInteger(R.integer.min_answers_amount);
         final int MIN_QUESTION_LENGTH = appResources.getInteger(R.integer.min_question_length);
-        findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
-            boolean atLeastOneAnswerIsCorrect = false;
-            for (Answer answer : answersAdapter.collection)
-                if (answer.isCorrect) atLeastOneAnswerIsCorrect = true;
 
-            if (!atLeastOneAnswerIsCorrect)
+        findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
+            int amountOfCorrectAnswers = 0;
+            for (Answer answer : answersAdapter.collection)
+                if (answer.isCorrect) amountOfCorrectAnswers++;
+
+            String possibleQuestion = questionInput.getText().toString();
+            int sufficientAmountOfCorrectAnswers;
+            try { sufficientAmountOfCorrectAnswers =
+                    Integer.parseInt(sufficientAmountInput.getText().toString());
+            } catch (NumberFormatException e) {
+                error(appResources.getString(R.string.invalid_sufficient_amount));
+                return;
+            }
+
+            if (amountOfCorrectAnswers == 0)
                 error(appResources.getString(R.string.no_correct_answers_found));
+            else if (sufficientAmountOfCorrectAnswers > amountOfCorrectAnswers
+                    || sufficientAmountOfCorrectAnswers < 1)
+                error(appResources.getString(R.string.invalid_sufficient_amount));
             else if (answersAdapter.collection.size() < MIN_ANSWERS_AMOUNT)
                 error(appResources.getString(R.string.too_few_answers));
-            else if (questionInput.getText().length() < MIN_QUESTION_LENGTH)
+            else if (possibleQuestion.length() < MIN_QUESTION_LENGTH)
                 error(appResources.getString(R.string.question_too_short));
             else {
                 Intent activityResult = new Intent();
-                activityResult.putExtra("question", questionInput.getText().toString());
-                activityResult.putExtra("answers", answersAdapter.collection);
+                activityResult.putExtra("question",
+                    new Question(possibleQuestion, answersAdapter.collection,
+                        sufficientAmountOfCorrectAnswers));
                 setResult(RESULT_OK, activityResult);
                 finish();
             }

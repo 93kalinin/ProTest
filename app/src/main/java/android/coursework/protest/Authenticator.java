@@ -1,8 +1,6 @@
-package android.coursework.protest.Authentication;
+package android.coursework.protest;
 
 import android.content.Intent;
-import android.coursework.protest.Browse;
-import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -17,7 +15,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
  */
 public class Authenticator extends AppCompatActivity {
 
-    private android.coursework.protest.Authentication.UI UI;
+    private android.coursework.protest.UI UI;
     private Inputs inputs;
 
     private FirebaseAuth auth;
@@ -77,7 +75,7 @@ public class Authenticator extends AppCompatActivity {
 
     private void allowAccess(FirebaseUser user) {
         if (user == null) throw new SecurityException("no user is currently logged in");
-        Intent intent = new Intent(this, Browse.class);
+        Intent intent = new Intent(this, MakeTest.class);
         intent.putExtra("user", user);  //лишнее, проще найти его там
         startActivity(intent);
         this.finish();

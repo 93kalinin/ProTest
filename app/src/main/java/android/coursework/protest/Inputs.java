@@ -1,4 +1,4 @@
-package android.coursework.protest.Authentication;
+package android.coursework.protest;
 
 import android.coursework.protest.R;
 import android.support.design.widget.TextInputLayout;

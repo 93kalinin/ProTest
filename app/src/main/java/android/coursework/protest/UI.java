@@ -1,4 +1,4 @@
-package android.coursework.protest.Authentication;
+package android.coursework.protest;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
