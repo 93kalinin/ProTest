@@ -2,8 +2,6 @@ package android.coursework.protest;
 
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
@@ -13,9 +11,6 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,28 +19,26 @@ import java.util.List;
  * RecyclerView.Adapter ближе к нуждам моего приложения.
  */
 abstract class GenericRecyclerAdapter<T>
-extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder>
-implements Iterable<T>, Filterable {
+extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> implements Filterable {
 
     /**
-     * Шаблон элемента прокручиваемого списка. Прикрепляет к нему обработчик нажатия.
-     * Может содержать несколько текстовых полей
+     * Объекты этого класса отвечают за отображение отдельных элементов прокручиваемого списка.
+     * Элемент может содержать несколько текстовых полей, потому класс содержит резервные поля,
+     * которые не обязательно инициализировать (title, id, description, tags).
      */
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        ArrayList<TextView> textViews = new ArrayList<>();
+        TextView text, title, id, description, tags;
 
-        ViewHolder(View itemView, int... textViewIds) {
+        ViewHolder(View itemView, TextView text) {
             super(itemView);
-            for (int id : textViewIds)
-                textViews.add(itemView.findViewById(id));
+            this.text = text;
             itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
         }
     }
 
     LinkedList<T> collection = new LinkedList<>();
     private LinkedList<T> backup;
-    private boolean originalBackup = true;
     private final ConstraintLayout rootLayout;
     private T lastDeleted;
     private int lastPosition;
@@ -64,56 +57,21 @@ implements Iterable<T>, Filterable {
     @Override
     abstract public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position);
 
-    /**
-     * Переопределив этот метод, можно задать обработчик нажатия на элемент списка. По умолчанию
-     * он ничего не делает, игнорируя нажатия
-     * @param view - ссылка на графическое представление элемента списка
-     * @param adapterPosition - номер данного элемента в списке
-     */
-    void onClickListener(View view, int adapterPosition) { }
-
-    /**
-     * Добавляет прокручиваемым спискам возможность удаления элементов свайпом.
-     */
-    void attachDeleteOnSwipeTo(RecyclerView view, AppCompatActivity context) {
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
-                        | ItemTouchHelper.RIGHT) {
-                    @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int i)
-                    { removeItem(viewHolder.getAdapterPosition()); }
-
-                    @Override
-                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
-                                          RecyclerView.ViewHolder target)
-                    { return false; }
-                });
-        view.setAdapter(this);
-        view.setLayoutManager(new LinearLayoutManager(context));
-        itemTouchHelper.attachToRecyclerView(view);
-    }
-
-
-    /**
-     * Этот метод потребуется переопределить в случае, если в элементе списка более одного
-     * текстового поля. Id этих полей нужно будет передать конструктору ViewHolder для регистрации
-     */
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View inflatedView = LayoutInflater.from(viewGroup.getContext())
                 .inflate(VIEW_LAYOUT, viewGroup, false);
-        return new ViewHolder(inflatedView, TEXT_VIEW_ID);
+        return new ViewHolder(inflatedView, inflatedView.findViewById(TEXT_VIEW_ID));
     }
 
     /*
      * Отвечает за реализацию поиска. Подменяет ссылку на коллекцию всех элементов списка
      * ссылкой на коллекцию только тех элементов, которые удовлетворяют критериям поиска.
-     * Для того, чтобы ссылка на исходную коллекцию не была при этом утрачена, использует метод
-     * setCollectionState.
      */
     @Override
     public Filter getFilter() {
-        setCollectionState();
+        if (backup == null) backup = collection;
+        else collection = backup;
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence currentText) {
@@ -140,18 +98,47 @@ implements Iterable<T>, Filterable {
     public int getItemCount() { return collection.size(); }
 
     /**
-     * Сохраняет ссылку на коллекцию или восстанавливает её исходное состояние.
+     * Переопределив этот метод, можно задать обработчик нажатия на элемент списка. По умолчанию
+     * он ничего не делает, игнорируя нажатия
+     * @param view - ссылка на графическое представление элемента списка
+     * @param adapterPosition - номер данного элемента в списке
      */
-    private void setCollectionState() {
-        if (originalBackup) {
-            backup = collection;
-            originalBackup = false;
-        }
-        else collection = backup;
-    }
+    void onClickListener(View view, int adapterPosition) { }
 
-    void clear()
-        { collection = new LinkedList<>(); }
+    /**
+     * Добавляет прокручиваемым спискам возможность удаления элементов свайпом.
+     */
+    void attachDeleteOnSwipeTo(RecyclerView view) {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
+                        | ItemTouchHelper.RIGHT) {
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int position) {
+                        lastDeleted = collection.get(position);
+                        lastPosition = position;
+                        collection.remove(position);
+                        notifyItemRemoved(position);
+                        Snackbar.make(rootLayout, R.string.element_deleted, Snackbar.LENGTH_LONG)
+                                .setAction(R.string.cancel, view -> {
+                                    if (lastDeleted == null  ||  collection.size() >= ITEMS_LIMIT) {
+                                        Snackbar.make(rootLayout, R.string.failed_to_restore, Snackbar.LENGTH_SHORT)
+                                                .show();
+                                        return;
+                                    }
+                                    collection.add(lastPosition, lastDeleted);
+                                    notifyItemInserted(lastPosition);
+                                    lastDeleted = null;
+                                })
+                                .show();
+                        }
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder holder,
+                                          RecyclerView.ViewHolder target)
+                    { return false; }
+                });
+        itemTouchHelper.attachToRecyclerView(view);
+    }
 
     void addItem(T item) {
         if (collection.size() >= ITEMS_LIMIT) {
@@ -163,26 +150,4 @@ implements Iterable<T>, Filterable {
         collection.add(item);
         notifyDataSetChanged();
     }
-
-    private void removeItem(int position) {
-        lastDeleted = collection.get(position);
-        lastPosition = position;
-        collection.remove(position);
-        notifyItemRemoved(position);
-        Snackbar.make(rootLayout, R.string.element_deleted, Snackbar.LENGTH_LONG)
-                .setAction(R.string.cancel, view -> {
-                    if (lastDeleted == null  ||  collection.size() >= ITEMS_LIMIT) {
-                        Snackbar.make(rootLayout, R.string.failed_to_restore, Snackbar.LENGTH_SHORT)
-                                .show();
-                        return;
-                    }
-                    collection.add(lastPosition, lastDeleted);
-                    notifyItemInserted(lastPosition);
-                    lastDeleted = null;
-                })
-                .show();
-    }
-
-    public Iterator<T> iterator()
-        { return Collections.unmodifiableList(collection).iterator(); }
 }

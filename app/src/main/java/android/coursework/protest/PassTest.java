@@ -64,24 +64,32 @@ public class PassTest extends AppCompatActivity {
                 int questionNumber = tab.getPosition();
                 String question = questions.get(questionNumber);
                 Map<String, Boolean> possibleAnswers = questionsAndAnswers.get(question);
+                FloatingActionButton fab = findViewById(R.id.next_question);
 
                 for (Map.Entry answer : possibleAnswers.entrySet())
                     answersAdapter.addItem(
                         new SimpleEntry<>((String) answer.getKey(), false));
                 questionView.setText(question);
+
+                if (questionNumber == questions.size()) {
+                    fab.setBackgroundResource(R.drawable.ic_done_white_24dp);
+                    fab.setOnClickListener(view -> {
+
+                    });
+                }
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab)
-                { answersAdapter.clear(); }
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+                answersAdapter.clear();
+                }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) { }
         });
         answersRecycler.setAdapter(answersAdapter);
         answersRecycler.setLayoutManager(new LinearLayoutManager(this));
-
-        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

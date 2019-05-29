@@ -2,7 +2,6 @@ package android.coursework.protest.Authentication;
 
 import android.content.Intent;
 import android.coursework.protest.Browse;
-import android.coursework.protest.MakeTest;
 import android.coursework.protest.R;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
