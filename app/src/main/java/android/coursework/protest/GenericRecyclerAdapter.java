@@ -31,8 +31,12 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> implements Filte
         TextView text, title, id, description, tags;
 
         ViewHolder(View itemView, TextView text) {
-            super(itemView);
+            this(itemView);
             this.text = text;
+        }
+
+        ViewHolder(View itemView) {
+            super(itemView);
             itemView.setOnClickListener(view -> onClickListener(view, getAdapterPosition()));
         }
     }

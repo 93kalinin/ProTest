@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /*
  * Публичный конструктор без параметров и геттеры для каждого поля необходимы для хранения
@@ -15,7 +14,7 @@ class MyTest implements Serializable {
     private List<Question> questions;
     private Date creationTime;
     private boolean isPrivate;
-    private boolean visibleResult;
+    private boolean hideResult;
     private String accessKey;
     private String title;
     private String description;
@@ -25,13 +24,13 @@ class MyTest implements Serializable {
 
     public MyTest() {}
 
-    MyTest(List<Question> questions, Date creationTime, boolean isPrivate, boolean visibleResult,
+    MyTest(List<Question> questions, Date creationTime, boolean isPrivate, boolean hideResult,
             String accessKey, String title, String description, ArrayList<String> tags,
             String authorNickname, String authorId) {
         this.questions = questions;
         this.creationTime = creationTime;
         this.isPrivate = isPrivate;
-        this.visibleResult = visibleResult;
+        this.hideResult = hideResult;
         this.accessKey = accessKey;
         this.title = title;
         this.description = description;
@@ -46,7 +45,7 @@ class MyTest implements Serializable {
     public List<Question> getQuestions() { return questions; }
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
-    public boolean getVisibleResult() { return visibleResult; }
+    public boolean getHideResult() { return hideResult; }
     public String getAccessKey() { return accessKey; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }

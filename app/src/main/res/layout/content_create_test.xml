@@ -10,7 +10,7 @@
     tools:showIn="@layout/activity_create_test">
 
     <Switch
-        android:id="@+id/show_result_switch"
+        android:id="@+id/hide_result_switch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -101,7 +101,7 @@
         android:layout_marginEnd="16dp"
         android:checked="false"
         android:gravity="start|center"
-        android:text="@string/privacy_switch_prompt_off"
+        android:text="@string/make_test_private"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tags_search" />
@@ -128,6 +128,6 @@
         android:text="@string/add_question_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/show_result_switch" />
+        app:layout_constraintTop_toBottomOf="@+id/hide_result_switch" />
 
 </android.support.constraint.ConstraintLayout>

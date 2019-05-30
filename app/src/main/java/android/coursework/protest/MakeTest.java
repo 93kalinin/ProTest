@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -27,13 +29,14 @@ public class MakeTest extends AppCompatActivity {
 
     GenericRecyclerAdapter<Question> questionsAdapter;
     final int CREATE_QUESTION_REQUEST_CODE = 1;
+    private ConstraintLayout rootLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_test);
+        rootLayout = findViewById(R.id.create_test_root_layout);
         Resources appResources = getResources();
-        ConstraintLayout rootLayout = findViewById(R.id.create_test_root_layout);
 
         /*
         Определить questionsAdapter и questionsRecycler, отвечающие за хранение и отображение
@@ -100,24 +103,20 @@ public class MakeTest extends AppCompatActivity {
         tagsRecycler.requestLayout();
 
         /*
-        Прикрепить обработчик нажатия переключателя уровня видимости теста (открытый/закрытый).
+        Прикрепить обработчик нажатия переключателей уровня видимости теста (открытый/закрытый) и
+        отображения результата для тестируемого. Обработчик один и тот же, предотвращающий ситуацию,
+        при которой у общедоступного теста скрыт результат (это запрещено ТЗ).
         */
-        Switch privacySwitch = findViewById(R.id.privacy_switch);
-        privacySwitch.setOnCheckedChangeListener((switch_, isChecked) -> {
-            if (isChecked) switch_.setText(R.string.privacy_switch_prompt_on);
-            else switch_.setText(R.string.privacy_switch_prompt_off);
-        });
-
-        /*
-        Прикрепить обработчик нажатия переключателя отображения результата теста.
-        */
-        Switch resultIsVisibleSwitch = findViewById(R.id.show_result_switch);
-        resultIsVisibleSwitch.setOnCheckedChangeListener((switch_, isChecked) -> {
-            if (isChecked && privacySwitch.isChecked()) {
-                switch_.setChecked(false);
+        Switch hideResultSwitch = findViewById(R.id.hide_result_switch);
+        Switch testIsPrivateSwitch = findViewById(R.id.privacy_switch);
+        CompoundButton.OnCheckedChangeListener listener = (switch_, isChecked) -> {
+            if (!testIsPrivateSwitch.isChecked() && hideResultSwitch.isChecked()) {
+                hideResultSwitch.setChecked(false);
                 error(appResources.getString(R.string.visible_result_for_public_test));
             }
-        });
+        };
+        testIsPrivateSwitch.setOnCheckedChangeListener(listener);
+        hideResultSwitch.setOnCheckedChangeListener(listener);
 
         /*
         Прикрепить обработчик нажатия кнопки, отвечающей за завершение создания теста. Обработчик
@@ -134,20 +133,20 @@ public class MakeTest extends AppCompatActivity {
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
             if (questionsAdapter.collection.size() < MIN_QUESTIONS_AMOUNT)
-                error(appResources.getString(R.string.too_few_questions));
+                error(appResources.getString(R.string.too_few_questions, MIN_QUESTIONS_AMOUNT));
             else if (titleInput.getText().length() < MIN_TITLE_LENGTH)
-                error(appResources.getString(R.string.title_too_short));
+                error(appResources.getString(R.string.title_too_short, MIN_TITLE_LENGTH));
             else if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
-                error(appResources.getString(R.string.description_too_short));
+                error(appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
             else {
-                String accessKey = privacySwitch.isChecked() ?
+                String accessKey = testIsPrivateSwitch.isChecked() ?
                     ((Integer) questionsAdapter.collection.hashCode()).toString()
                     : appResources.getString(R.string.public_access_key);
                 MyTest newTest = new MyTest(
                     questionsAdapter.collection,
                     new Date(),
-                    privacySwitch.isChecked(),
-                    resultIsVisibleSwitch.isChecked(),
+                    testIsPrivateSwitch.isChecked(),
+                    hideResultSwitch.isChecked(),
                     accessKey,
                     titleInput.getText().toString(),
                     descriptionInput.getText().toString(),
@@ -157,13 +156,20 @@ public class MakeTest extends AppCompatActivity {
 
                 database.collection("tests")
                     .add(newTest)
-                    .addOnSuccessListener(documentReference ->
-                        Toast.makeText(getApplicationContext(),
-                                appResources.getString(R.string.test_added), Toast.LENGTH_SHORT)
-                            .show())
-                    .addOnFailureListener(exception ->
-                        Toast.makeText(getApplicationContext(), exception.getMessage(),
-                                Toast.LENGTH_SHORT)
+                    .addOnSuccessListener(documentReference -> {
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                        String newTestId = documentReference.getId();
+                        String dialogMessage = newTest.getIsPrivate() ?
+                            appResources.getString(R.string.new_test_id_and_key, newTestId, accessKey)
+                            : appResources.getString(R.string.new_test_id, newTest);
+                        dialog.setTitle(R.string.test_added)
+                            .setMessage(dialogMessage)
+                            .setCancelable(true)
+                            .create()
+                            .show();
+                        })
+                    .addOnFailureListener(e ->
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT)
                             .show());
             }
         });
@@ -194,7 +200,7 @@ public class MakeTest extends AppCompatActivity {
     }
 
     private void error(String message) {
-        Snackbar.make(findViewById(R.id.create_question_root_layout), message, Snackbar.LENGTH_LONG)
+        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
     }
 }

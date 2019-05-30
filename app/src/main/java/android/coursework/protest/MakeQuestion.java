@@ -95,9 +95,9 @@ public class MakeQuestion extends AppCompatActivity {
                     || sufficientAmountOfCorrectAnswers < 1)
                 error(appResources.getString(R.string.invalid_sufficient_amount));
             else if (answersAdapter.collection.size() < MIN_ANSWERS_AMOUNT)
-                error(appResources.getString(R.string.too_few_answers));
+                error(appResources.getString(R.string.too_few_answers, MIN_ANSWERS_AMOUNT));
             else if (possibleQuestion.length() < MIN_QUESTION_LENGTH)
-                error(appResources.getString(R.string.question_too_short));
+                error(appResources.getString(R.string.question_too_short, MIN_QUESTION_LENGTH));
             else {
                 Intent activityResult = new Intent();
                 activityResult.putExtra("question",

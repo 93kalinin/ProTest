@@ -13,6 +13,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.AbstractMap.SimpleEntry;
@@ -32,7 +34,7 @@ public class PassTest extends AppCompatActivity {
         setSupportActionBar(toolbar);
         rootLayout = findViewById(R.id.test_pass_root_layout);
 
-        Map<String, Map<String, Boolean>> questionsAndAnswers = test.getQuestions();
+        List<Question> questionsAndAnswers = test.getQuestions();
         TabLayout tabLayout = findViewById(R.id.questions_tabs);
         for (int i = 1; i <= questionsAndAnswers.size(); ++i)
             tabLayout.addTab(tabLayout.newTab().setText(((Integer) i).toString()));
@@ -42,7 +44,7 @@ public class PassTest extends AppCompatActivity {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 SimpleEntry<String, Boolean> answer = collection.get(position);
-                TextView view = (TextView) holder.textViews.get(0);
+                TextView view = (TextView) holder.text;
                 view.setText(answer.getKey());
             }
 
@@ -55,7 +57,7 @@ public class PassTest extends AppCompatActivity {
             }
         };
 
-        ArrayList<String> questions = new ArrayList<>(questionsAndAnswers.keySet());
+        ArrayList<String> questions = new ArrayList<>();
         TextView questionView = findViewById(R.id.question_view);
         RecyclerView answersRecycler = findViewById(R.id.answers_recycler);
         tabLayout.addOnTabSelectedListener(new TabLayout.BaseOnTabSelectedListener() {
@@ -63,7 +65,7 @@ public class PassTest extends AppCompatActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 int questionNumber = tab.getPosition();
                 String question = questions.get(questionNumber);
-                Map<String, Boolean> possibleAnswers = questionsAndAnswers.get(question);
+                Map<String, Boolean> possibleAnswers = new HashMap<String, Boolean>();
                 FloatingActionButton fab = findViewById(R.id.next_question);
 
                 for (Map.Entry answer : possibleAnswers.entrySet())
@@ -81,8 +83,6 @@ public class PassTest extends AppCompatActivity {
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
-
-                answersAdapter.clear();
                 }
 
             @Override
@@ -90,13 +90,13 @@ public class PassTest extends AppCompatActivity {
         });
         answersRecycler.setAdapter(answersAdapter);
         answersRecycler.setLayoutManager(new LinearLayoutManager(this));
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        //fab.setOnClickListener(new View.OnClickListener() {
+        //    @Override
+        //    public void onClick(View view) {
+        //        Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+        //                .setAction("Action", null).show();
+        //    }
+        //});
     }
 
 }

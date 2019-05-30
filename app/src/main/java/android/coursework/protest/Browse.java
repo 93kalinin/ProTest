@@ -83,31 +83,27 @@ public class Browse extends AppCompatActivity {
 
     private void setUpTestsRecycler() {
         testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
-            { collection = new LinkedList<>(retreivedTests.keySet()); }
-
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
                 View inflatedView = LayoutInflater.from(viewGroup.getContext())
                         .inflate(VIEW_LAYOUT, viewGroup, false);
-                return new ViewHolder(inflatedView, R.id.test_title, R.id.test_id,
-                        R.id.test_description, R.id.test_tags);
+                ViewHolder holder = new ViewHolder(inflatedView);
+                holder.title = findViewById(R.id.test_title);
+                holder.id = findViewById(R.id.test_id);
+                holder.description = findViewById(R.id.test_description);
+                holder.tags = findViewById(R.id.test_tags);
+                return holder;
             }
 
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 MyTest test = collection.get(position);
-                String testTitle = test.getTitle();
-                String testId = retreivedTests.get(test);
-                List<String> testTags = test.getTags();
-                TextView titleView = (TextView) holder.textViews.get(0);
-                TextView idView = (TextView) holder.textViews.get(1);
-                TextView descriptionView = (TextView) holder.textViews.get(2);
-                TextView tagsView = (TextView) holder.textViews.get(3);
+                String id = appResources.getString(R.string.new_test_id, retreivedTests.get(test));
 
-                titleView.setText(testTitle);
-                idView.setText("ID: " + testId);
-                descriptionView.setText(test.getDescription());
-                tagsView.setText(TextUtils.join(" | ", testTags));
+                holder.title.setText(test.getTitle());
+                holder.id.setText(id);
+                holder.description.setText(test.getDescription());
+                holder.tags.setText(TextUtils.join(" | ", test.getTags()));
             }
 
             @Override
@@ -128,6 +124,7 @@ public class Browse extends AppCompatActivity {
                 idTextView.setVisibility(newVisibility);
             }
         };
+        testsAdapter.collection = new LinkedList<>(retreivedTests.keySet());
         testsAdapter.VIEW_LAYOUT = R.layout.test_card;
         testsRecycler.setAdapter(testsAdapter);
         testsRecycler.setLayoutManager(new LinearLayoutManager(this));
