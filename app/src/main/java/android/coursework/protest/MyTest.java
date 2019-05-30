@@ -15,17 +15,17 @@ class MyTest implements Serializable {
     private Date creationTime;
     private boolean isPrivate;
     private boolean hideResult;
-    private String accessKey;
+    private int accessKey;
     private String title;
     private String description;
     private ArrayList<String> tags;
     private String authorNickname;
     private String authorId;
 
-    public MyTest() {}
+    public MyTest() { }
 
     MyTest(List<Question> questions, Date creationTime, boolean isPrivate, boolean hideResult,
-            String accessKey, String title, String description, ArrayList<String> tags,
+            int accessKey, String title, String description, ArrayList<String> tags,
             String authorNickname, String authorId) {
         this.questions = questions;
         this.creationTime = creationTime;
@@ -46,7 +46,7 @@ class MyTest implements Serializable {
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
     public boolean getHideResult() { return hideResult; }
-    public String getAccessKey() { return accessKey; }
+    public int getAccessKey() { return accessKey; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public ArrayList<String> getTags() { return tags; }

@@ -139,9 +139,9 @@ public class MakeTest extends AppCompatActivity {
             else if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
                 error(appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
             else {
-                String accessKey = testIsPrivateSwitch.isChecked() ?
-                    ((Integer) questionsAdapter.collection.hashCode()).toString()
-                    : appResources.getString(R.string.public_access_key);
+                int accessKey = testIsPrivateSwitch.isChecked() ?
+                    questionsAdapter.collection.hashCode()
+                    : appResources.getInteger(R.integer.default_access_key);
                 MyTest newTest = new MyTest(
                     questionsAdapter.collection,
                     new Date(),

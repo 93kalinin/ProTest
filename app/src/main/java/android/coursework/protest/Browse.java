@@ -23,6 +23,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -38,50 +39,41 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-/*
- * Отвечает за просмотр списка доступных для прохождения тестов и поиск.
- * Поле retreivedTests содержит словарь, сопоставляющий тесту его id в FirestoreDB.
- */
 public class Browse extends AppCompatActivity {
 
-    private GenericRecyclerAdapter<MyTest> testsAdapter;
-    private HashMap<MyTest, String> retreivedTests;
-    private RecyclerView testsRecycler;
-    private Resources appResources;
-    private ConstraintLayout rootLayout;
-    private FirebaseUser user;
-    private FirebaseFirestore db;
+    FirebaseFirestore database;
+    GenericRecyclerAdapter<MyTest> testsAdapter;
+    ConstraintLayout rootLayout;
+    Resources appResources;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browse);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        appResources = getResources();
-        testsRecycler = findViewById(R.id.tests_recycler);
-        db = FirebaseFirestore.getInstance();
         rootLayout = findViewById(R.id.browse_tests_root_layout);
-        retreivedTests = new HashMap<>();
+        appResources = getResources();
 
-        db.collection("tests")
+
+        /*
+        Загрузить из базы данных тесты и поставить в соответствие каждому тесту его ID
+         */
+        HashMap<MyTest, String> testsFromDb = new HashMap<>();
+        database = FirebaseFirestore.getInstance();
+        database.collection("tests")
+                .whereEqualTo("isPrivate", false)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     for (DocumentSnapshot test : querySnapshot)
-                        retreivedTests.put(test.toObject(MyTest.class), test.getId());
-                    setUpTestsRecycler();
-                });
-    }
+                        testsFromDb.put(test.toObject(MyTest.class), test.getId());
+                })
+                .addOnFailureListener(fail -> error(fail.getMessage()));
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.browse_dashboard, menu);
-        SearchView searchView = (SearchView) menu.findItem(R.id.tests_search).getActionView();
-        setUpSerach(searchView);
-        return true;
-    }
-
-    private void setUpTestsRecycler() {
+        /*
+        Определить testsAdapter и testsRecycler, отвечающие за хранение и отображение тестов,
+        загруженных из БД
+         */
+        RecyclerView testsRecycler = findViewById(R.id.tests_recycler);
         testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
             @Override
             public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -98,7 +90,7 @@ public class Browse extends AppCompatActivity {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 MyTest test = collection.get(position);
-                String id = appResources.getString(R.string.new_test_id, retreivedTests.get(test));
+                String id = appResources.getString(R.string.new_test_id, testsFromDb.get(test));
 
                 holder.title.setText(test.getTitle());
                 holder.id.setText(id);
@@ -114,7 +106,7 @@ public class Browse extends AppCompatActivity {
                 MyTest selectedTest = collection.get(adapterPosition);
 
                 int newVisibility = (passTestButton.getVisibility() == View.VISIBLE) ?
-                    View.GONE : View.VISIBLE;
+                        View.GONE : View.VISIBLE;
                 Intent testPassIntent = new Intent(getApplication(), PassTest.class);
                 testPassIntent.putExtra("test", selectedTest);
 
@@ -124,20 +116,60 @@ public class Browse extends AppCompatActivity {
                 idTextView.setVisibility(newVisibility);
             }
         };
-        testsAdapter.collection = new LinkedList<>(retreivedTests.keySet());
+        testsAdapter.collection = new LinkedList<>(testsFromDb.keySet());
         testsAdapter.VIEW_LAYOUT = R.layout.test_card;
         testsRecycler.setAdapter(testsAdapter);
         testsRecycler.setLayoutManager(new LinearLayoutManager(this));
+
+        /*
+        Прикрепить обработчик нажатия кнопки доступа к тесту по паролю.
+         */
+        findViewById(R.id.launch_private_test).setOnClickListener(button -> {
+            EditText passwordInput = findViewById(R.id.private_test_password);
+            int password;
+            try { password = Integer.parseInt(passwordInput.getText().toString()); }
+            catch (NumberFormatException e) {
+                error(appResources.getString(R.string.int_parse_fail));
+                return;
+            }
+
+            database.collection("tests")
+                    .whereEqualTo("isPrivate", true)
+                    .whereEqualTo("accessKey", password)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        MyTest testToPass = querySnapshot
+                            .getDocuments()
+                            .get(0)
+                            .toObject(MyTest.class);
+                        offerTest(testToPass);
+                })
+                .addOnFailureListener(fail ->
+                    appResources.getString(R.string.failed_to_find_test));
+        });
     }
 
-    private void setUpSerach(SearchView testsSearchView) {
+    /*
+    Добавить строку поиска тестов вверху экрана и прикрепить к ней обработчик поиска. Строка поиска
+    имеет двойное назначение: при наборе текста она ищет совпадения в названиях тестов, а при
+    нажатии кнопки "ввод" на виртуальной клавиатуре ищет тест по введенному ID
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.browse_dashboard, menu);
+        SearchView testsSearchView = (SearchView) menu.findItem(R.id.tests_search).getActionView();
+
         testsSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {   // поиск по ID
-                db.collection("tests")
+                database.collection("tests")
                         .document(query)
                         .get()
-                        .addOnCompleteListener(task -> idSearchHandler(task));
+                        .addOnSuccessListener(documentSnapshot ->
+                            offerTest(documentSnapshot.toObject(MyTest.class)))
+                        .addOnFailureListener(fail ->
+                            error(appResources.getString(R.string.failed_to_find_test)));
                 return false;
             }
 
@@ -147,21 +179,24 @@ public class Browse extends AppCompatActivity {
                 return false;
             }
         });
+        return true;
     }
 
-    /* Нужен для улучшения читаемости кода путем выноса его части в оделный метод */
-    private void idSearchHandler(Task<DocumentSnapshot> task) {
-        if (task.isSuccessful()) {
-            Snackbar.make(rootLayout, R.string.test_found, Snackbar.LENGTH_LONG)
-                    .setAction(R.string.pass_test, view -> {
-                        MyTest test = task.getResult().toObject(MyTest.class);
-                        Intent testPassIntent = new Intent(getApplication(), PassTest.class);
-                        testPassIntent.putExtra("test", test);
-                        startActivity(testPassIntent);
-                    })
-                    .show();
-        }
-        else Snackbar.make(rootLayout, R.string.failed_to_find_test, Snackbar.LENGTH_SHORT)
+    /*
+    Отобразить сообщение внизу экрана с предложением пройти тест
+     */
+    void offerTest(MyTest test) {
+        Snackbar.make(rootLayout, R.string.test_found, Snackbar.LENGTH_LONG)
+                .setAction(R.string.pass_test, view -> {
+                    Intent testPassIntent = new Intent(getApplication(), PassTest.class);
+                    testPassIntent.putExtra("test", test);
+                    startActivity(testPassIntent);
+                })
+                .show();
+    }
+
+    private void error(String message) {
+        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
     }
 }

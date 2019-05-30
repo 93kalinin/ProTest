@@ -7,4 +7,5 @@
     <integer name="min_description_length">10</integer>
     <integer name="min_answers_amount">2</integer>
     <integer name="max_answers_amount">16</integer>
+    <integer name="default_access_key">1995</integer>
 </resources>

@@ -60,10 +60,11 @@
     <string name="hide_test_result">Не показывать результат тестируемому</string>
     <string name="show_test_result">Показывать результат тестируемому</string>
     <string name="visible_result_for_public_test">Результат общедоступных тестов всегда должен быть виден пользователю</string>
-    <string name="new_test_id_and_key">ID: %1$s\nkey: %2$s</string>
+    <string name="new_test_id_and_key">ID: %1$s\nkey: %2$d</string>
     <string name="new_test_id">ID: %1$s</string>
     <string name="hide_result">Не показывать результат тестируемому</string>
     <string name="show_result">Показывать результат тестируемому</string>
     <string name="make_test_private">Доступ к тесту по паролю</string>
     <string name="make_test_public">Общедоступный тест</string>
+    <string name="int_parse_fail">Пароль может содержать только цифры и знак минус</string>
 </resources>
