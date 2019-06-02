@@ -3,6 +3,7 @@ package android.coursework.protest;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
@@ -11,7 +12,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.EditText;
 
-import static android.coursework.protest.Question.Answer;
+import java.util.ArrayList;
+
+import static android.coursework.protest.MyTest.Question.Answer;
+import static android.coursework.protest.MyTest.printError;
 
 public class MakeQuestion extends AppCompatActivity {
 
@@ -20,6 +24,7 @@ public class MakeQuestion extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_question);
         Resources appResources = getResources();
+        ConstraintLayout rootLayout = findViewById(R.id.create_question_root_layout);
         /*
         Определить answersAdapter и answersRecycler, отвечающие за хранение и отображение
         вариантов ответа, создаваемых пользователем.
@@ -50,9 +55,9 @@ public class MakeQuestion extends AppCompatActivity {
          */
         TextInputEditText answerInput = findViewById(R.id.answer_input);
         findViewById(R.id.add_answer_button).setOnClickListener(button -> {
-            String possibleAnswer = answerInput.getText().toString();
+            String possibleAnswer = answerInput.getText().toString().trim();
             if (possibleAnswer.length() < appResources.getInteger(R.integer.min_answer_length))
-                printError(appResources.getString(R.string.answer_too_short));
+                printError(rootLayout, appResources.getString(R.string.answer_too_short));
             else {
                 answersAdapter.addItem(new Answer(possibleAnswer, false));
                 answerInput.setText("");
@@ -73,37 +78,32 @@ public class MakeQuestion extends AppCompatActivity {
             for (Answer answer : answersAdapter.collection)
                 if (answer.isCorrect) amountOfCorrectAnswers++;
 
-            String possibleQuestion = questionInput.getText().toString();
+            String possibleQuestion = questionInput.getText().toString().trim();
             int sufficientAmountOfCorrectAnswers;
             try { sufficientAmountOfCorrectAnswers =
                     Integer.parseInt(sufficientAmountInput.getText().toString());
             } catch (NumberFormatException e) {
-                printError(appResources.getString(R.string.invalid_sufficient_amount));
+                printError(rootLayout, appResources.getString(R.string.invalid_sufficient_amount));
                 return;
             }
 
             if (amountOfCorrectAnswers == 0)
-                printError(appResources.getString(R.string.no_correct_answers_found));
+                printError(rootLayout, appResources.getString(R.string.no_correct_answers_found));
             else if (sufficientAmountOfCorrectAnswers > amountOfCorrectAnswers
                     || sufficientAmountOfCorrectAnswers < 1)
-                printError(appResources.getString(R.string.invalid_sufficient_amount));
+                printError(rootLayout, appResources.getString(R.string.invalid_sufficient_amount));
             else if (answersAdapter.collection.size() < MIN_ANSWERS_AMOUNT)
-                printError(appResources.getString(R.string.too_few_answers, MIN_ANSWERS_AMOUNT));
+                printError(rootLayout, appResources.getString(R.string.too_few_answers, MIN_ANSWERS_AMOUNT));
             else if (possibleQuestion.length() < MIN_QUESTION_LENGTH)
-                printError(appResources.getString(R.string.question_too_short, MIN_QUESTION_LENGTH));
+                printError(rootLayout, appResources.getString(R.string.question_too_short, MIN_QUESTION_LENGTH));
             else {
                 Intent activityResult = new Intent();
                 activityResult.putExtra("question",
-                    new Question(possibleQuestion, answersAdapter.collection,
+                    new MyTest.Question(possibleQuestion, new ArrayList<>(answersAdapter.collection),
                         sufficientAmountOfCorrectAnswers));
                 setResult(RESULT_OK, activityResult);
                 finish();
             }
         });
-    }
-
-    void printError(String message) {
-        Snackbar.make(findViewById(R.id.create_question_root_layout), message, Snackbar.LENGTH_LONG)
-                .show();
     }
 }

@@ -26,6 +26,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.LinkedList;
 import java.util.List;
 
+import static android.coursework.protest.MyTest.printError;
+
+
 public class Browse extends AppCompatActivity {
 
     FirebaseFirestore database;
@@ -57,7 +60,7 @@ public class Browse extends AppCompatActivity {
                     }
                     setUpTestsRecycler();
                 })
-                .addOnFailureListener(fail -> printError(fail.getMessage()));
+                .addOnFailureListener(fail -> printError(rootLayout, fail.getMessage()));
         /*
         Прикрепить обработчик нажатия кнопки доступа к тесту по паролю.
          */
@@ -66,7 +69,7 @@ public class Browse extends AppCompatActivity {
             int password;
             try { password = Integer.parseInt(passwordInput.getText().toString()); }
             catch (NumberFormatException e) {
-                printError(appResources.getString(R.string.int_parse_fail));
+                printError(rootLayout, appResources.getString(R.string.int_parse_fail));
                 return;
             }
 
@@ -75,15 +78,15 @@ public class Browse extends AppCompatActivity {
                     .whereEqualTo("accessKey", password)
                     .get()
                     .addOnSuccessListener(querySnapshot -> {
-                        List<DocumentSnapshot> testToPass = querySnapshot
+                        List<DocumentSnapshot> tests = querySnapshot
                             .getDocuments();
-                        if (testToPass.isEmpty())
-                            printError(appResources.getString(R.string.test_not_found));
+                        if (tests.isEmpty())
+                            printError(rootLayout, appResources.getString(R.string.test_not_found));
                         else
-                            offerTest(testToPass.get(0).toObject(MyTest.class));
+                            offerTest(tests.get(0));
                 })
                 .addOnFailureListener(fail ->
-                    printError(appResources.getString(R.string.test_by_password_error)));
+                    printError(rootLayout, appResources.getString(R.string.test_by_password_error)));
         });
     }
     /*
@@ -156,12 +159,12 @@ public class Browse extends AppCompatActivity {
                         .get()
                         .addOnSuccessListener(documentSnapshot -> {
                             if (documentSnapshot.exists())
-                                offerTest(documentSnapshot.toObject(MyTest.class));
+                                offerTest(documentSnapshot);
                             else
-                                printError(appResources.getString(R.string.test_not_found));
+                                printError(rootLayout, appResources.getString(R.string.test_not_found));
                         })
                         .addOnFailureListener(fail ->
-                                printError(appResources.getString(R.string.test_by_password_error)));
+                                printError(rootLayout, appResources.getString(R.string.test_by_password_error)));
                 return false;
             }
 
@@ -176,18 +179,15 @@ public class Browse extends AppCompatActivity {
     /*
     Отобразить сообщение внизу экрана с предложением пройти тест
      */
-    void offerTest(MyTest test) {
+    void offerTest(DocumentSnapshot testSnapshot) {
         Snackbar.make(rootLayout, R.string.test_found, Snackbar.LENGTH_LONG)
                 .setAction(R.string.pass_test, view -> {
                     Intent testPassIntent = new Intent(getApplication(), PassTest.class);
+                    MyTest test = testSnapshot.toObject(MyTest.class);
+                    test.testId = testSnapshot.getId();
                     testPassIntent.putExtra("test", test);
                     startActivity(testPassIntent);
                 })
-                .show();
-    }
-
-    private void printError(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
     }
 }

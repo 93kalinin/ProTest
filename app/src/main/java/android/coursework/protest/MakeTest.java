@@ -25,9 +25,11 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 
+import static android.coursework.protest.MyTest.printError;
+
 public class MakeTest extends AppCompatActivity {
 
-    GenericRecyclerAdapter<Question> questionsAdapter;
+    GenericRecyclerAdapter<MyTest.Question> questionsAdapter;
     final int CREATE_QUESTION_REQUEST_CODE = 1;
     final int DEFAULT_ACCESS_KEY = 12345;
     private ConstraintLayout rootLayout;
@@ -44,7 +46,7 @@ public class MakeTest extends AppCompatActivity {
         вопросов, созданных пользователем.
          */
         RecyclerView questionsRecycler = findViewById(R.id.questions_recycler_view);
-        questionsAdapter = new GenericRecyclerAdapter<Question>(rootLayout) {
+        questionsAdapter = new GenericRecyclerAdapter<MyTest.Question>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 String question = collection.get(position).getQuestion();
@@ -119,7 +121,7 @@ public class MakeTest extends AppCompatActivity {
         CompoundButton.OnCheckedChangeListener listener = (switch_, isChecked) -> {
             if (!testIsPrivateSwitch.isChecked() && hideResultSwitch.isChecked()) {
                 hideResultSwitch.setChecked(false);
-                printError(appResources.getString(R.string.visible_result_for_public_test));
+                printError(rootLayout, appResources.getString(R.string.visible_result_for_public_test));
             }
         };
         testIsPrivateSwitch.setOnCheckedChangeListener(listener);
@@ -138,25 +140,26 @@ public class MakeTest extends AppCompatActivity {
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
             if (questionsAdapter.collection.size() < MIN_QUESTIONS_AMOUNT)
-                printError(appResources.getString(R.string.too_few_questions, MIN_QUESTIONS_AMOUNT));
+                printError(rootLayout, appResources.getString(R.string.too_few_questions, MIN_QUESTIONS_AMOUNT));
             else if (titleInput.getText().length() < MIN_TITLE_LENGTH)
-                printError(appResources.getString(R.string.title_too_short, MIN_TITLE_LENGTH));
+                printError(rootLayout, appResources.getString(R.string.title_too_short, MIN_TITLE_LENGTH));
             else if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
-                printError(appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
+                printError(rootLayout, appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
             else {
-                int accessKey = testIsPrivateSwitch.isChecked() ?
+                int newAccessKey = testIsPrivateSwitch.isChecked() ?
                     questionsAdapter.collection.hashCode() : DEFAULT_ACCESS_KEY;
-                MyTest newTest = new MyTest(
-                    questionsAdapter.collection,
-                    new Date(),
-                    testIsPrivateSwitch.isChecked(),
-                    hideResultSwitch.isChecked(),
-                    accessKey,
-                    titleInput.getText().toString(),
-                    descriptionInput.getText().toString(),
-                    selectedTags,
-                    currentUser.getDisplayName(),
-                    currentUser.getUid());
+                MyTest newTest = new MyTest() {{
+                    questions = new ArrayList<>(questionsAdapter.collection);
+                    creationTime = new Date();
+                    isPrivate = testIsPrivateSwitch.isChecked();
+                    hideResult = hideResultSwitch.isChecked();
+                    accessKey = newAccessKey;
+                    title = titleInput.getText().toString().trim();
+                    description = descriptionInput.getText().toString().trim();
+                    tags = selectedTags;
+                    authorNickname = currentUser.getDisplayName();
+                    authorId = currentUser.getUid();
+                }};
 
                 database.collection("tests")
                     .add(newTest)
@@ -164,7 +167,7 @@ public class MakeTest extends AppCompatActivity {
                         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
                         String newTestId = documentReference.getId();
                         String dialogMessage = newTest.getIsPrivate() ?
-                            appResources.getString(R.string.new_test_id_and_key, newTestId, accessKey)
+                            appResources.getString(R.string.new_test_id_and_key, newTestId, newAccessKey)
                             : appResources.getString(R.string.new_test_id, newTestId);
                         dialog.setTitle(R.string.test_added)
                               .setNeutralButton(R.string.ok, (dialog_, id) -> dialog_.cancel())
@@ -184,7 +187,7 @@ public class MakeTest extends AppCompatActivity {
         findViewById(R.id.add_question_button).setOnClickListener(button -> {
             if (questionsAdapter.collection.size()
                     >= appResources.getInteger(R.integer.max_questions_amount))
-                printError(appResources.getString(R.string.too_many_questions));
+                printError(rootLayout, appResources.getString(R.string.too_many_questions));
             else {
                 Intent intent = new Intent(this, MakeQuestion.class);
                 startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
@@ -197,13 +200,8 @@ public class MakeTest extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  resultCode == RESULT_OK) {
-            Question question = (Question) intent.getExtras().getSerializable("question");
+            MyTest.Question question = (MyTest.Question) intent.getExtras().getSerializable("question");
             questionsAdapter.addItem(question);
         }
-    }
-
-    private void printError(String message) {
-        Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
-                .show();
     }
 }

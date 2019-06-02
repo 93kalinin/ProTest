@@ -5,10 +5,10 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/root_layout"
+    android:id="@+id/auth_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Authenticator"
+    tools:context=".Authenticate"
     tools:visibility="visible">
 
     <!-- Форма регистрации -->
@@ -19,7 +19,7 @@
         android:layout_centerInParent="true"
         android:layout_centerHorizontal="true"
         android:orientation="vertical"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -122,7 +122,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusableInTouchMode="true"
-            android:onClick="signUp"
             android:text="@string/register" />
 
     </LinearLayout>
@@ -177,7 +176,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:focusableInTouchMode="true"
-            android:onClick="signIn"
             android:text="@string/sign_in" />
 
     </LinearLayout>
@@ -195,17 +193,15 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <Button
-            android:id="@+id/sign_in"
+            android:id="@+id/go_to_signin_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="goToSignin"
             android:text="@string/sign_in_button" />
 
         <Button
-            android:id="@+id/sign_up"
+            android:id="@+id/go_to_signup_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="goToSignup"
             android:text="@string/sign_up_button" />
 
     </LinearLayout>

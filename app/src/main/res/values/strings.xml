@@ -75,4 +75,12 @@
     <string name="test_passed">%1$d верных ответов из %2$d возможных</string>
     <string name="test_result">Тест пройден</string>
     <string name="test_complete">Прохождение теста завершено, но тестировщик отключил отображение результатов. Результат был отправлен тестировщику.</string>
+    <string name="time_spent">%1$d мин. %2$d сек.</string>
+    <string name="result_upload_fail">Не удалось отправить результат тестирования тестировщику</string>
+    <string name="email_error">Некоррекнтый адрес электронной почты</string>
+    <string name="password_error">Не менее 8 символов; обязательны строчные и заглавные буквы, цифры</string>
+    <string name="nickname_error">Необходимо более 3-х символов; только латинские буквы и пробелы</string>
+    <string name="signin_fail">Не удалось войти в приложение</string>
+    <string name="invalid_inputs">В одно или несколько полей введены некоррекнтые данные</string>
+    <string name="signup_fail">Регистрация не удалась</string>
 </resources>

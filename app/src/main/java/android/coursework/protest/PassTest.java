@@ -16,13 +16,13 @@ import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.SetOptions;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.Map;
 
-import static android.coursework.protest.Question.Answer;
+import static android.coursework.protest.MyTest.Question.Answer;
+import static android.coursework.protest.MyTest.TestResult;
+import static android.coursework.protest.MyTest.printError;
 
 public class PassTest extends AppCompatActivity {
 
@@ -38,9 +38,9 @@ public class PassTest extends AppCompatActivity {
         за хранение и отображение вариантов ответа на вопрос
          */
         MyTest test = (MyTest) getIntent().getExtras().getSerializable("test");
-        LinkedList<Question> questions = test.getQuestions();
+        ArrayList<MyTest.Question> questions = test.getQuestions();
         RecyclerView answersRecycler = findViewById(R.id.answers_recycler);
-        GenericRecyclerAdapter<Question.Answer> answersAdapter =
+        GenericRecyclerAdapter<MyTest.Question.Answer> answersAdapter =
         new GenericRecyclerAdapter<Answer>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
@@ -62,7 +62,7 @@ public class PassTest extends AppCompatActivity {
         Создать вкладки с вопросами. Задать обработчик выбора вкладок, который будет загружать
         в answersAdapter варианты ответа, относящиеся к выбранному в данный момент вопросу.
          */
-        for (int i = questions.size(); i > 0; --i)
+        for (int i = 1; i <= questions.size(); ++i)
             tabLayout.addTab(tabLayout.newTab()
                                       .setText(String.valueOf(i)));
 
@@ -71,13 +71,15 @@ public class PassTest extends AppCompatActivity {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 int questionNumber = tab.getPosition();
-                Question selectedQuestion = questions.get(questionNumber);
-                answersAdapter.collection = selectedQuestion.answers;
+                MyTest.Question selectedQuestion = questions.get(questionNumber);
+                for (Answer answer : selectedQuestion.answers)
+                    answersAdapter.addItem(answer);
                 questionView.setText(selectedQuestion.question);
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) { }
+            public void onTabUnselected(TabLayout.Tab tab)
+                { answersAdapter.collection = new LinkedList<>(); }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) { }
@@ -87,12 +89,13 @@ public class PassTest extends AppCompatActivity {
         отправляет тестировщику (при условии приватности теста) и отображает тестируемому результат.
          */
         long initialRealTime = SystemClock.elapsedRealtime();    // точка отсчета времени начала теста
-        final int MILLISECONDS_TO_MINUTES = 60_000;    // для преобразования миллисекунд в минуты
+        final int MILLISECONDS_TO_SECONDS = 1_000;
+        final int SECONDS_TO_MINUTES = 60;
         FloatingActionButton finishTestButton = findViewById(R.id.finish_test);
 
         finishTestButton.setOnClickListener(button -> {
             int finalScore = 0;
-            for (Question question : questions) {
+            for (MyTest.Question question : questions) {
                 int amountOfCorrectAnswers = 0;
                 for (Answer answer : question.answers)
                     if (answer.isCorrect && answer.isChecked) amountOfCorrectAnswers++;
@@ -104,19 +107,25 @@ public class PassTest extends AppCompatActivity {
                 FirebaseFirestore database = FirebaseFirestore.getInstance();
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 int testCompletionPercentage = (int) (finalScore * 100F) / amountOfQuestions;
+                long secondsElapsedSinceTestStart =
+                    (testCompletionRealTime - initialRealTime) / MILLISECONDS_TO_SECONDS;
                 long minutesElapsedSinceTestStart =
-                    (testCompletionRealTime - initialRealTime) / MILLISECONDS_TO_MINUTES;
-                Map<String, String> testResult = new HashMap<String, String>() {{
-                    put("testId", test.testId);
-                    put("testTitle", test.title);
-                    put("testeeId", currentUser.getUid());
-                    put("testeeName", currentUser.getDisplayName());
-                    put("completionPercentage", String.valueOf(testCompletionPercentage));
-                    put("minutesElapsed", String.valueOf(minutesElapsedSinceTestStart));
+                    secondsElapsedSinceTestStart / SECONDS_TO_MINUTES;
+                String timeSpentOnTest = appResources.getString(R.string.time_spent,
+                    minutesElapsedSinceTestStart, secondsElapsedSinceTestStart);
+                TestResult testResult = new TestResult() {{
+                    testId = test.testId;
+                    testTitle = test.title;
+                    testeeId = currentUser.getUid();
+                    testeeName = currentUser.getDisplayName();
+                    completionPercentage = String.valueOf(testCompletionPercentage);
+                    timeSpent = timeSpentOnTest;
                 }};
                 database.collection("results")
                         .document(test.authorId)
-                        .set(testResult, SetOptions.merge());
+                        .set(testResult)
+                        .addOnFailureListener(fail ->
+                            printError(rootLayout, appResources.getString(R.string.result_upload_fail)));
             }
             String resultMessage = test.hideResult ?
                 appResources.getString(R.string.test_complete)
