@@ -75,7 +75,7 @@ public class Authenticator extends AppCompatActivity {
 
     private void allowAccess(FirebaseUser user) {
         if (user == null) throw new SecurityException("no user is currently logged in");
-        Intent intent = new Intent(this, MakeTest.class);
+        Intent intent = new Intent(this, Browse.class);
         intent.putExtra("user", user);  //лишнее, проще найти его там
         startActivity(intent);
         this.finish();

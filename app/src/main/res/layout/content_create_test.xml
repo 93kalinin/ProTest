@@ -14,7 +14,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:checked="false"
         android:gravity="start|center"
@@ -28,16 +27,12 @@
         android:id="@+id/tags_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
         android:background="@drawable/common_google_signin_btn_icon_light_normal_background"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/test_name_layout"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
 
     <android.support.design.widget.TextInputLayout
         android:id="@+id/test_name_layout"
@@ -48,7 +43,7 @@
         android:layout_marginEnd="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/tags_search">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/title_input"
@@ -85,12 +80,11 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:elevation="5dp"
         android:queryHint="@string/add_tags"
         app:iconifiedByDefault="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/test_description_layout" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Switch
         android:id="@+id/privacy_switch"
@@ -104,7 +98,7 @@
         android:text="@string/make_test_private"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tags_search" />
+        app:layout_constraintTop_toBottomOf="@+id/test_description_layout" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/questions_recycler_view"

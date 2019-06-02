@@ -1,22 +1,15 @@
 package android.coursework.protest;
 
-import android.app.SearchManager;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.coursework.protest.R;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,24 +17,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Browse extends AppCompatActivity {
 
     FirebaseFirestore database;
+    LinkedList<MyTest> testsFromDb;
     GenericRecyclerAdapter<MyTest> testsAdapter;
     ConstraintLayout rootLayout;
     Resources appResources;
@@ -53,26 +41,56 @@ public class Browse extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         rootLayout = findViewById(R.id.browse_tests_root_layout);
         appResources = getResources();
-
-
         /*
-        Загрузить из базы данных тесты и поставить в соответствие каждому тесту его ID
+        Загрузить из базы данных общедоступные тесты
          */
-        HashMap<MyTest, String> testsFromDb = new HashMap<>();
+        testsFromDb = new LinkedList<>();
         database = FirebaseFirestore.getInstance();
         database.collection("tests")
                 .whereEqualTo("isPrivate", false)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    for (DocumentSnapshot test : querySnapshot)
-                        testsFromDb.put(test.toObject(MyTest.class), test.getId());
+                    for (DocumentSnapshot testSnapshot : querySnapshot) {
+                        MyTest retreivedTest = testSnapshot.toObject(MyTest.class);
+                        retreivedTest.testId = testSnapshot.getId();
+                        testsFromDb.add(retreivedTest);
+                    }
+                    setUpTestsRecycler();
                 })
-                .addOnFailureListener(fail -> error(fail.getMessage()));
-
+                .addOnFailureListener(fail -> printError(fail.getMessage()));
         /*
-        Определить testsAdapter и testsRecycler, отвечающие за хранение и отображение тестов,
-        загруженных из БД
+        Прикрепить обработчик нажатия кнопки доступа к тесту по паролю.
          */
+        findViewById(R.id.launch_private_test).setOnClickListener(button -> {
+            EditText passwordInput = findViewById(R.id.private_test_password);
+            int password;
+            try { password = Integer.parseInt(passwordInput.getText().toString()); }
+            catch (NumberFormatException e) {
+                printError(appResources.getString(R.string.int_parse_fail));
+                return;
+            }
+
+            database.collection("tests")
+                    .whereEqualTo("isPrivate", true)
+                    .whereEqualTo("accessKey", password)
+                    .get()
+                    .addOnSuccessListener(querySnapshot -> {
+                        List<DocumentSnapshot> testToPass = querySnapshot
+                            .getDocuments();
+                        if (testToPass.isEmpty())
+                            printError(appResources.getString(R.string.test_not_found));
+                        else
+                            offerTest(testToPass.get(0).toObject(MyTest.class));
+                })
+                .addOnFailureListener(fail ->
+                    printError(appResources.getString(R.string.test_by_password_error)));
+        });
+    }
+    /*
+    Определить testsAdapter и testsRecycler, отвечающие за хранение и отображение тестов,
+    загруженных из БД.
+    */
+    private void setUpTestsRecycler() {
         RecyclerView testsRecycler = findViewById(R.id.tests_recycler);
         testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
             @Override
@@ -80,20 +98,18 @@ public class Browse extends AppCompatActivity {
                 View inflatedView = LayoutInflater.from(viewGroup.getContext())
                         .inflate(VIEW_LAYOUT, viewGroup, false);
                 ViewHolder holder = new ViewHolder(inflatedView);
-                holder.title = findViewById(R.id.test_title);
-                holder.id = findViewById(R.id.test_id);
-                holder.description = findViewById(R.id.test_description);
-                holder.tags = findViewById(R.id.test_tags);
+                holder.title = inflatedView.findViewById(R.id.test_title);
+                holder.id = inflatedView.findViewById(R.id.test_id);
+                holder.description = inflatedView.findViewById(R.id.test_description);
+                holder.tags = inflatedView.findViewById(R.id.test_tags);
                 return holder;
             }
 
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 MyTest test = collection.get(position);
-                String id = appResources.getString(R.string.new_test_id, testsFromDb.get(test));
-
                 holder.title.setText(test.getTitle());
-                holder.id.setText(id);
+                holder.id.setText(appResources.getString(R.string.id, test.getTestId()));
                 holder.description.setText(test.getDescription());
                 holder.tags.setText(TextUtils.join(" | ", test.getTags()));
             }
@@ -116,39 +132,11 @@ public class Browse extends AppCompatActivity {
                 idTextView.setVisibility(newVisibility);
             }
         };
-        testsAdapter.collection = new LinkedList<>(testsFromDb.keySet());
         testsAdapter.VIEW_LAYOUT = R.layout.test_card;
+        testsAdapter.collection = testsFromDb;
         testsRecycler.setAdapter(testsAdapter);
         testsRecycler.setLayoutManager(new LinearLayoutManager(this));
-
-        /*
-        Прикрепить обработчик нажатия кнопки доступа к тесту по паролю.
-         */
-        findViewById(R.id.launch_private_test).setOnClickListener(button -> {
-            EditText passwordInput = findViewById(R.id.private_test_password);
-            int password;
-            try { password = Integer.parseInt(passwordInput.getText().toString()); }
-            catch (NumberFormatException e) {
-                error(appResources.getString(R.string.int_parse_fail));
-                return;
-            }
-
-            database.collection("tests")
-                    .whereEqualTo("isPrivate", true)
-                    .whereEqualTo("accessKey", password)
-                    .get()
-                    .addOnSuccessListener(querySnapshot -> {
-                        MyTest testToPass = querySnapshot
-                            .getDocuments()
-                            .get(0)
-                            .toObject(MyTest.class);
-                        offerTest(testToPass);
-                })
-                .addOnFailureListener(fail ->
-                    appResources.getString(R.string.failed_to_find_test));
-        });
     }
-
     /*
     Добавить строку поиска тестов вверху экрана и прикрепить к ней обработчик поиска. Строка поиска
     имеет двойное назначение: при наборе текста она ищет совпадения в названиях тестов, а при
@@ -166,10 +154,14 @@ public class Browse extends AppCompatActivity {
                 database.collection("tests")
                         .document(query)
                         .get()
-                        .addOnSuccessListener(documentSnapshot ->
-                            offerTest(documentSnapshot.toObject(MyTest.class)))
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists())
+                                offerTest(documentSnapshot.toObject(MyTest.class));
+                            else
+                                printError(appResources.getString(R.string.test_not_found));
+                        })
                         .addOnFailureListener(fail ->
-                            error(appResources.getString(R.string.failed_to_find_test)));
+                                printError(appResources.getString(R.string.test_by_password_error)));
                 return false;
             }
 
@@ -181,7 +173,6 @@ public class Browse extends AppCompatActivity {
         });
         return true;
     }
-
     /*
     Отобразить сообщение внизу экрана с предложением пройти тест
      */
@@ -195,7 +186,7 @@ public class Browse extends AppCompatActivity {
                 .show();
     }
 
-    private void error(String message) {
+    private void printError(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
     }

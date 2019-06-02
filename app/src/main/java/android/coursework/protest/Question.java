@@ -1,6 +1,7 @@
 package android.coursework.protest;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,16 +32,15 @@ class Question implements Serializable {
         public String getAnswer() { return answer; }
         public boolean getIsCorrect() { return isCorrect; }
         public boolean getIsChecked() { return isChecked; }
-        boolean isCorrect() { return isCorrect == isChecked; }
     }
 
     String question;
     int sufficient;
-    List<Answer> answers;
+    LinkedList<Answer> answers;
 
     public Question() { }
 
-    Question(String question, List<Answer> answers, int sufficient) {
+    Question(String question, LinkedList<Answer> answers, int sufficient) {
         this.question = question;
         this.answers = answers;
         this.sufficient = sufficient;
@@ -51,5 +51,5 @@ class Question implements Serializable {
 
     public String getQuestion() { return question; }
     public int getSufficient() { return sufficient; }
-    public List<Answer> getAnswers() { return answers; }
+    public LinkedList<Answer> getAnswers() { return answers; }
 }

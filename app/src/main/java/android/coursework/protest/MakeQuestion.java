@@ -13,10 +13,6 @@ import android.widget.EditText;
 
 import static android.coursework.protest.Question.Answer;
 
-/**
- * Отвечает за создание вопроса и прикрепленных к нему вариантов ответа (поле answers). Каждому
- * варианту ответа сопоставляется его истинность/ложность
- */
 public class MakeQuestion extends AppCompatActivity {
 
     @Override
@@ -24,7 +20,6 @@ public class MakeQuestion extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_question);
         Resources appResources = getResources();
-
         /*
         Определить answersAdapter и answersRecycler, отвечающие за хранение и отображение
         вариантов ответа, создаваемых пользователем.
@@ -50,7 +45,6 @@ public class MakeQuestion extends AppCompatActivity {
         answersAdapter.attachDeleteOnSwipeTo(answersRecycler);
         answersRecycler.setAdapter(answersAdapter);
         answersRecycler.setLayoutManager(new LinearLayoutManager(this));
-
         /*
         Прикрепить обработчик нажатия кнопки, отвечающей за добавление варианта ответа на вопрос.
          */
@@ -58,13 +52,12 @@ public class MakeQuestion extends AppCompatActivity {
         findViewById(R.id.add_answer_button).setOnClickListener(button -> {
             String possibleAnswer = answerInput.getText().toString();
             if (possibleAnswer.length() < appResources.getInteger(R.integer.min_answer_length))
-                error(appResources.getString(R.string.answer_too_short));
+                printError(appResources.getString(R.string.answer_too_short));
             else {
                 answersAdapter.addItem(new Answer(possibleAnswer, false));
                 answerInput.setText("");
             }
         });
-
         /*
         Прикрепить обработчик нажатия кнопки, отвечающей за завершение создания вопроса. Обработчик
         проверяет на корректность все данные, относящиеся к созданному пользователем вопросу и
@@ -85,19 +78,19 @@ public class MakeQuestion extends AppCompatActivity {
             try { sufficientAmountOfCorrectAnswers =
                     Integer.parseInt(sufficientAmountInput.getText().toString());
             } catch (NumberFormatException e) {
-                error(appResources.getString(R.string.invalid_sufficient_amount));
+                printError(appResources.getString(R.string.invalid_sufficient_amount));
                 return;
             }
 
             if (amountOfCorrectAnswers == 0)
-                error(appResources.getString(R.string.no_correct_answers_found));
+                printError(appResources.getString(R.string.no_correct_answers_found));
             else if (sufficientAmountOfCorrectAnswers > amountOfCorrectAnswers
                     || sufficientAmountOfCorrectAnswers < 1)
-                error(appResources.getString(R.string.invalid_sufficient_amount));
+                printError(appResources.getString(R.string.invalid_sufficient_amount));
             else if (answersAdapter.collection.size() < MIN_ANSWERS_AMOUNT)
-                error(appResources.getString(R.string.too_few_answers, MIN_ANSWERS_AMOUNT));
+                printError(appResources.getString(R.string.too_few_answers, MIN_ANSWERS_AMOUNT));
             else if (possibleQuestion.length() < MIN_QUESTION_LENGTH)
-                error(appResources.getString(R.string.question_too_short, MIN_QUESTION_LENGTH));
+                printError(appResources.getString(R.string.question_too_short, MIN_QUESTION_LENGTH));
             else {
                 Intent activityResult = new Intent();
                 activityResult.putExtra("question",
@@ -109,7 +102,7 @@ public class MakeQuestion extends AppCompatActivity {
         });
     }
 
-    void error(String message) {
+    void printError(String message) {
         Snackbar.make(findViewById(R.id.create_question_root_layout), message, Snackbar.LENGTH_LONG)
                 .show();
     }

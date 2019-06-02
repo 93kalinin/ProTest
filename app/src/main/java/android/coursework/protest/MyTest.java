@@ -3,6 +3,7 @@ package android.coursework.protest;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -11,22 +12,23 @@ import java.util.List;
  */
 class MyTest implements Serializable {
 
-    private List<Question> questions;
-    private Date creationTime;
-    private boolean isPrivate;
-    private boolean hideResult;
-    private int accessKey;
-    private String title;
-    private String description;
-    private ArrayList<String> tags;
-    private String authorNickname;
-    private String authorId;
+    LinkedList<Question> questions;
+    Date creationTime;
+    boolean isPrivate;
+    boolean hideResult;
+    int accessKey;
+    String title;
+    String description;
+    ArrayList<String> tags;
+    String authorNickname;
+    String authorId;
+    String testId;
 
     public MyTest() { }
 
-    MyTest(List<Question> questions, Date creationTime, boolean isPrivate, boolean hideResult,
-            int accessKey, String title, String description, ArrayList<String> tags,
-            String authorNickname, String authorId) {
+    MyTest(LinkedList<Question> questions, Date creationTime, boolean isPrivate, boolean hideResult,
+           int accessKey, String title, String description, ArrayList<String> tags,
+           String authorNickname, String authorId) {
         this.questions = questions;
         this.creationTime = creationTime;
         this.isPrivate = isPrivate;
@@ -42,7 +44,7 @@ class MyTest implements Serializable {
     @Override
     public String toString() { return title; }
 
-    public List<Question> getQuestions() { return questions; }
+    public LinkedList<Question> getQuestions() { return questions; }
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
     public boolean getHideResult() { return hideResult; }
@@ -52,4 +54,5 @@ class MyTest implements Serializable {
     public ArrayList<String> getTags() { return tags; }
     public String getAuthorNickname() { return authorNickname; }
     public String getAuthorId() { return authorId; }
+    public String getTestId() { return testId; }
 }

@@ -29,6 +29,7 @@ public class MakeTest extends AppCompatActivity {
 
     GenericRecyclerAdapter<Question> questionsAdapter;
     final int CREATE_QUESTION_REQUEST_CODE = 1;
+    final int DEFAULT_ACCESS_KEY = 12345;
     private ConstraintLayout rootLayout;
 
     @Override
@@ -36,8 +37,8 @@ public class MakeTest extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_test);
         rootLayout = findViewById(R.id.create_test_root_layout);
+        FirebaseFirestore database = FirebaseFirestore.getInstance();
         Resources appResources = getResources();
-
         /*
         Определить questionsAdapter и questionsRecycler, отвечающие за хранение и отображение
         вопросов, созданных пользователем.
@@ -54,13 +55,14 @@ public class MakeTest extends AppCompatActivity {
         questionsAdapter.attachDeleteOnSwipeTo(questionsRecycler);
         questionsRecycler.setAdapter(questionsAdapter);
         questionsRecycler.setLayoutManager(new LinearLayoutManager(this));
-
         /*
-        Определить tagsAdapter и tagsRecycler, отвечающие за хранение и отображение тегов.
+        Определить tagsAdapter и tagsRecycler, отвечающие за хранение и
+        отображение тегов. Если уже выбранный тег выбрать повторно, он будет удален.
         */
         ArrayList<String> selectedTags = new ArrayList<>();
         LinkedList<String> availableTags =
-            new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
+        new LinkedList<>(Arrays.asList(appResources.getStringArray(R.array.tags)));
+
         SearchView tagsSearchView = findViewById(R.id.tags_search);
         RecyclerView tagsRecycler = findViewById(R.id.tags_recycler_view);
         GenericRecyclerAdapter<String> tagsAdapter =
@@ -73,13 +75,19 @@ public class MakeTest extends AppCompatActivity {
 
             @Override
             void onClickListener(View view, int itemPosition) {
-                selectedTags.add(collection.get(itemPosition));
+                String tag = collection.get(itemPosition);
+                String message = (selectedTags.contains(tag)) ?
+                    appResources.getString(R.string.tag_removed, tag)
+                    : appResources.getString(R.string.tag_added, tag);
+
+                if (selectedTags.contains(tag)) selectedTags.remove(tag);
+                else selectedTags.add(tag);
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT)
+                     .show();
                 tagsSearchView.clearFocus();
-                Toast.makeText(getApplicationContext(), R.string.tag_added, Toast.LENGTH_SHORT)
-                        .show();
             }
         };
-        tagsAdapter.collection = availableTags;    //TODO: загрузка из бд!
+        tagsAdapter.collection = availableTags;
         tagsAdapter.VIEW_LAYOUT = R.layout.simple_row;
         tagsAdapter.TEXT_VIEW_ID = R.id.simple_row_text;
         tagsRecycler.setAdapter(tagsAdapter);
@@ -99,9 +107,8 @@ public class MakeTest extends AppCompatActivity {
                 return false;
             }
         });
-        tagsRecycler.bringToFront();    //TODO: necessary?
+        tagsRecycler.bringToFront();
         tagsRecycler.requestLayout();
-
         /*
         Прикрепить обработчик нажатия переключателей уровня видимости теста (открытый/закрытый) и
         отображения результата для тестируемого. Обработчик один и тот же, предотвращающий ситуацию,
@@ -112,12 +119,11 @@ public class MakeTest extends AppCompatActivity {
         CompoundButton.OnCheckedChangeListener listener = (switch_, isChecked) -> {
             if (!testIsPrivateSwitch.isChecked() && hideResultSwitch.isChecked()) {
                 hideResultSwitch.setChecked(false);
-                error(appResources.getString(R.string.visible_result_for_public_test));
+                printError(appResources.getString(R.string.visible_result_for_public_test));
             }
         };
         testIsPrivateSwitch.setOnCheckedChangeListener(listener);
         hideResultSwitch.setOnCheckedChangeListener(listener);
-
         /*
         Прикрепить обработчик нажатия кнопки, отвечающей за завершение создания теста. Обработчик
         проверяет на корректность все данные, относящиеся к созданному пользователем тесту и
@@ -125,7 +131,6 @@ public class MakeTest extends AppCompatActivity {
          */
         TextInputEditText titleInput = findViewById(R.id.title_input);
         TextInputEditText descriptionInput = findViewById(R.id.test_description_input);
-        FirebaseFirestore database = FirebaseFirestore.getInstance();
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         final int MIN_DESCRIPTION_LENGTH = appResources.getInteger(R.integer.min_description_length);
         final int MIN_QUESTIONS_AMOUNT = appResources.getInteger(R.integer.min_questions_amount);
@@ -133,15 +138,14 @@ public class MakeTest extends AppCompatActivity {
 
         findViewById(R.id.finish_question_creation_fab).setOnClickListener(view -> {
             if (questionsAdapter.collection.size() < MIN_QUESTIONS_AMOUNT)
-                error(appResources.getString(R.string.too_few_questions, MIN_QUESTIONS_AMOUNT));
+                printError(appResources.getString(R.string.too_few_questions, MIN_QUESTIONS_AMOUNT));
             else if (titleInput.getText().length() < MIN_TITLE_LENGTH)
-                error(appResources.getString(R.string.title_too_short, MIN_TITLE_LENGTH));
+                printError(appResources.getString(R.string.title_too_short, MIN_TITLE_LENGTH));
             else if (descriptionInput.getText().length() < MIN_DESCRIPTION_LENGTH)
-                error(appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
+                printError(appResources.getString(R.string.description_too_short, MIN_DESCRIPTION_LENGTH));
             else {
                 int accessKey = testIsPrivateSwitch.isChecked() ?
-                    questionsAdapter.collection.hashCode()
-                    : appResources.getInteger(R.integer.default_access_key);
+                    questionsAdapter.collection.hashCode() : DEFAULT_ACCESS_KEY;
                 MyTest newTest = new MyTest(
                     questionsAdapter.collection,
                     new Date(),
@@ -161,33 +165,32 @@ public class MakeTest extends AppCompatActivity {
                         String newTestId = documentReference.getId();
                         String dialogMessage = newTest.getIsPrivate() ?
                             appResources.getString(R.string.new_test_id_and_key, newTestId, accessKey)
-                            : appResources.getString(R.string.new_test_id, newTest);
+                            : appResources.getString(R.string.new_test_id, newTestId);
                         dialog.setTitle(R.string.test_added)
-                            .setMessage(dialogMessage)
-                            .setCancelable(true)
-                            .create()
-                            .show();
+                              .setNeutralButton(R.string.ok, (dialog_, id) -> dialog_.cancel())
+                              .setMessage(dialogMessage)
+                              .setCancelable(true)
+                              .create()
+                              .show();
                         })
                     .addOnFailureListener(e ->
                         Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT)
-                            .show());
+                             .show());
             }
         });
-
         /*
         Прикрепить обработчик нажатия кнопки, отвечающей за вызов экрана создания вопроса.
         */
         findViewById(R.id.add_question_button).setOnClickListener(button -> {
             if (questionsAdapter.collection.size()
                     >= appResources.getInteger(R.integer.max_questions_amount))
-                error(appResources.getString(R.string.too_many_questions));
+                printError(appResources.getString(R.string.too_many_questions));
             else {
                 Intent intent = new Intent(this, MakeQuestion.class);
                 startActivityForResult(intent, CREATE_QUESTION_REQUEST_CODE);
             }
         });
     }
-
     /*
     Определить метод, принимающий возвращаемый экраном создания вопросов вопрос.
     */
@@ -199,7 +202,7 @@ public class MakeTest extends AppCompatActivity {
         }
     }
 
-    private void error(String message) {
+    private void printError(String message) {
         Snackbar.make(rootLayout, message, Snackbar.LENGTH_LONG)
                 .show();
     }

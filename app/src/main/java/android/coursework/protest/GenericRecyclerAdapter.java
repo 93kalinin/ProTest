@@ -117,7 +117,8 @@ extends RecyclerView.Adapter<GenericRecyclerAdapter.ViewHolder> implements Filte
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT
                         | ItemTouchHelper.RIGHT) {
                     @Override
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int position) {
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                        int position = viewHolder.getAdapterPosition();
                         lastDeleted = collection.get(position);
                         lastPosition = position;
                         collection.remove(position);
