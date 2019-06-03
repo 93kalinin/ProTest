@@ -9,6 +9,36 @@
     tools:context=".Browse"
     tools:showIn="@layout/activity_browse">
 
+    <LinearLayout
+        android:id="@+id/check_test_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/test_contents"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TextView" />
+
+        <Button
+            android:id="@+id/verify_test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="одобрить" />
+
+        <Button
+            android:id="@+id/remove_test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="удалить" />
+    </LinearLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/tests_recycler"
         android:layout_width="match_parent"

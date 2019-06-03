@@ -8,18 +8,27 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static android.coursework.protest.MyTest.printError;
 
 public class Authenticate extends AppCompatActivity {
 
+    enum UserRole { TESTEE, TESTER, MODERATOR }
+
+    FirebaseAuth auth;
     View signupView, signinView, welcomeView, loadingView;
 
     @Override
@@ -62,9 +71,23 @@ public class Authenticate extends AppCompatActivity {
         findViewById(R.id.go_to_signin_layout).setOnClickListener(button -> switchTo(signinView));
         findViewById(R.id.go_to_signup_layout).setOnClickListener(button -> switchTo(signupView));
         /*
+        Обработчик селектора роли: найти текстовое поле с подсказкой, поясняющее возможности каждой
+        роли и изменять его содержимое в зависимости от выбранной роли
+         */
+        RadioGroup roleSelector = findViewById(R.id.role_radio_group);
+        TextView roleHint = findViewById(R.id.role_hint);
+        int testeeButtonId = R.id.signup_role_testee;
+        int testerButtonId = R.id.signup_role_tester;
+        roleSelector.setOnCheckedChangeListener((group, checkedId) -> {
+            int hint = (checkedId == testeeButtonId) ? R.string.testee_hint
+                     : (checkedId == testerButtonId) ? R.string.tester_hint
+                     : R.string.moder_hint;
+            roleHint.setText(hint);
+        });
+        /*
         Прикрепить обработчик к кнопке, отвечающей за вход. Есть анимация с полоской загрузки
          */
-        FirebaseAuth auth = FirebaseAuth.getInstance();
+        auth = FirebaseAuth.getInstance();
         findViewById(R.id.signin_button).setOnClickListener(button -> {
             String email = getInput(signinEmailLayout);
             String password = getInput(signinPasswordLayout);
@@ -81,12 +104,19 @@ public class Authenticate extends AppCompatActivity {
             else printError(rootLayout, appResources.getString(R.string.invalid_inputs));
         });
         /*
-        Прикрепить обработчик к кнопке, отвечающей за регистрацию
+        Прикрепить обработчик к кнопке, отвечающей за регистрацию. Закрепить за пользовательским
+        аккаунтом ник и роль.
         */
         findViewById(R.id.signup_button).setOnClickListener(button -> {
             String email = getInput(signupEmailLayout);
             String password = getInput(signupPasswordLayout);
             String nickname = getInput(signupNicknameLayout);
+            int selectedRoleId = roleSelector.getCheckedRadioButtonId();
+            UserRole selectedRole = (selectedRoleId == testeeButtonId) ? UserRole.TESTEE
+                                  : (selectedRoleId == testerButtonId) ? UserRole.TESTER
+                                  : UserRole.MODERATOR;
+
+            FirebaseFirestore database = FirebaseFirestore.getInstance();
             UserProfileChangeRequest nicknameRequest = new UserProfileChangeRequest.Builder()
                     .setDisplayName(nickname).build();
             OnFailureListener failureListener = fail -> {
@@ -99,18 +129,30 @@ public class Authenticate extends AppCompatActivity {
                     && nicknamePattern.matcher(nickname).matches()) {
                 switchTo(loadingView);
                 auth.createUserWithEmailAndPassword(email, password)
-                    .addOnSuccessListener(task -> {
+                    .addOnSuccessListener(task1 -> {
                         FirebaseUser user = auth.getCurrentUser();
                         user.updateProfile(nicknameRequest)
-                            .addOnSuccessListener(task1 -> allowAccess())
+                            .addOnSuccessListener(task2 -> {
+                                Map<String, String> roleUpdate = new HashMap<>();
+                                roleUpdate.put(user.getUid(), selectedRole.toString());
+                                database.collection("users")
+                                        .document("roles")
+                                        .set(roleUpdate, SetOptions.merge())
+                                        .addOnSuccessListener(task3 -> allowAccess())
+                                        .addOnFailureListener(failureListener);
+                                        })
                             .addOnFailureListener(failureListener);
                     })
                     .addOnFailureListener(failureListener);
             }
             else printError(rootLayout, appResources.getString(R.string.invalid_inputs));
         });
+        switchTo(welcomeView);
     }
 
+    /*
+    Убедиться, что текст в данном поле соответствует данному паттерну, иначе вывести данную ошибку.
+     */
     private void setValidationListener(TextInputLayout layout, Pattern validator, String error) {
         EditText inputField = layout.getEditText();
         inputField.setOnFocusChangeListener((field, hasFocus) -> {

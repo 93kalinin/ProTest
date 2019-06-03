@@ -18,7 +18,7 @@ class MyTest implements Serializable {
     Date creationTime;
     boolean isPrivate;
     boolean hideResult;
-    boolean isModerated;
+    boolean isApproved;
     int accessKey;
     String title;
     String description;

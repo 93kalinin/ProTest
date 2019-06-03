@@ -83,4 +83,11 @@
     <string name="signin_fail">Не удалось войти в приложение</string>
     <string name="invalid_inputs">В одно или несколько полей введены некоррекнтые данные</string>
     <string name="signup_fail">Регистрация не удалась</string>
+    <string name="testee_hint">Тестируемому доступны поиск и прохождение тестов</string>
+    <string name="tester_hint">Тестировщику доступны создание, поиск и прохождение тестов</string>
+    <string name="moder_hint">Модератор имеет доступ ко всем тестам и может их удалять</string>
+    <string name="test_id">Идентификатор теста: %1$s\n</string>
+    <string name="line_separator">%1$s\n</string>
+    <string name="test_approved">Тест одобрен</string>
+    <string name="test_removed">Тест удален</string>
 </resources>

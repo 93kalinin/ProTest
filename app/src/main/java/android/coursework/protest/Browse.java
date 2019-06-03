@@ -4,12 +4,12 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,25 +17,36 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.SetOptions;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static android.coursework.protest.MyTest.printError;
-
+import static android.coursework.protest.MyTest.Question;
+import static android.coursework.protest.MyTest.Question.Answer;
+import static android.coursework.protest.Authenticate.UserRole;
 
 public class Browse extends AppCompatActivity {
 
     FirebaseFirestore database;
-    LinkedList<MyTest> testsFromDb;
     GenericRecyclerAdapter<MyTest> testsAdapter;
     ConstraintLayout rootLayout;
     Resources appResources;
+    UserRole userRole;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,22 +56,36 @@ public class Browse extends AppCompatActivity {
         rootLayout = findViewById(R.id.browse_tests_root_layout);
         appResources = getResources();
         /*
-        Загрузить из базы данных общедоступные тесты
+        Определить роль пользователя в приложении и загрузить соответствующий набор тестов.
+        Изначально тестируемому доступны публичные тесты (он может загрузить закрытый тест отдельно),
+        тестировщику - тесты, автором которых он является, модератору - все тесты
          */
-        testsFromDb = new LinkedList<>();
+        LinkedList<MyTest> testsFromDb = new LinkedList<>();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseFirestore.getInstance();
-        database.collection("tests")
-                .whereEqualTo("isPrivate", false)
+        database.collection("users")
+                .document("roles")
                 .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    for (DocumentSnapshot testSnapshot : querySnapshot) {
-                        MyTest retreivedTest = testSnapshot.toObject(MyTest.class);
-                        retreivedTest.testId = testSnapshot.getId();
-                        testsFromDb.add(retreivedTest);
-                    }
-                    setUpTestsRecycler();
-                })
-                .addOnFailureListener(fail -> printError(rootLayout, fail.getMessage()));
+                .addOnSuccessListener(documentSnapshot -> {
+                    String roleString = documentSnapshot.getString(user.getUid());
+                    UserRole role = UserRole.valueOf(roleString);
+                    adjustLayoutFor(role);
+                    CollectionReference testsInDb = database.collection("tests");
+                    Query testsForThisUserRole =
+                          (role == UserRole.TESTEE) ? testsInDb.whereEqualTo("isPrivate", false)
+                        : (role == UserRole.TESTER) ? testsInDb.whereEqualTo("authorId", user.getUid())
+                        : testsInDb;
+                    testsForThisUserRole.get()
+                            .addOnSuccessListener(querySnapshot -> {
+                                for (DocumentSnapshot testSnapshot : querySnapshot) {
+                                    MyTest retreivedTest = testSnapshot.toObject(MyTest.class);
+                                    retreivedTest.testId = testSnapshot.getId();
+                                    testsFromDb.add(retreivedTest);
+                                }
+                                setUpTestsRecyclerWith(testsFromDb, role);
+                            })
+                            .addOnFailureListener(fail -> printError(rootLayout, fail.getMessage()));
+                });
         /*
         Прикрепить обработчик нажатия кнопки доступа к тесту по паролю.
          */
@@ -78,12 +103,9 @@ public class Browse extends AppCompatActivity {
                     .whereEqualTo("accessKey", password)
                     .get()
                     .addOnSuccessListener(querySnapshot -> {
-                        List<DocumentSnapshot> tests = querySnapshot
-                            .getDocuments();
-                        if (tests.isEmpty())
-                            printError(rootLayout, appResources.getString(R.string.test_not_found));
-                        else
-                            offerTest(tests.get(0));
+                        List<DocumentSnapshot> tests = querySnapshot.getDocuments();
+                        if (tests.isEmpty()) printError(rootLayout, appResources.getString(R.string.test_not_found));
+                        else offerTest(tests.get(0));
                 })
                 .addOnFailureListener(fail ->
                     printError(rootLayout, appResources.getString(R.string.test_by_password_error)));
@@ -91,9 +113,10 @@ public class Browse extends AppCompatActivity {
     }
     /*
     Определить testsAdapter и testsRecycler, отвечающие за хранение и отображение тестов,
-    загруженных из БД.
+    загруженных из БД. Закрепить за элементами списка тестов функционал, соответствующий роли пользователя
     */
-    private void setUpTestsRecycler() {
+    private void setUpTestsRecyclerWith(LinkedList<MyTest> testsFromDb, UserRole role) {
+        userRole = role;
         RecyclerView testsRecycler = findViewById(R.id.tests_recycler);
         testsAdapter = new GenericRecyclerAdapter<MyTest>(rootLayout) {
             @Override
@@ -111,7 +134,8 @@ public class Browse extends AppCompatActivity {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 MyTest test = collection.get(position);
-                holder.title.setText(test.getTitle());
+                String approvalMark = (test.isApproved) ? " ✓" : " ✗";
+                holder.title.setText(test.getTitle() + approvalMark);
                 holder.id.setText(appResources.getString(R.string.id, test.getTestId()));
                 holder.description.setText(test.getDescription());
                 holder.tags.setText(TextUtils.join(" | ", test.getTags()));
@@ -128,8 +152,11 @@ public class Browse extends AppCompatActivity {
                         View.GONE : View.VISIBLE;
                 Intent testPassIntent = new Intent(getApplication(), PassTest.class);
                 testPassIntent.putExtra("test", selectedTest);
+                View.OnClickListener roleDependentListener = (userRole == UserRole.MODERATOR) ?
+                          button -> checkTest(selectedTest)
+                        : button -> startActivity(testPassIntent);
 
-                passTestButton.setOnClickListener(button -> startActivity(testPassIntent));
+                passTestButton.setOnClickListener(roleDependentListener);
                 testDescription.setVisibility(newVisibility);
                 passTestButton.setVisibility(newVisibility);
                 idTextView.setVisibility(newVisibility);
@@ -177,6 +204,44 @@ public class Browse extends AppCompatActivity {
         return true;
     }
     /*
+    Просмотреть содержимое теста, не проходя его. Функционал модератора.
+     */
+    private void checkTest(MyTest test) {
+        StringBuilder testContents = new StringBuilder();
+        testContents.append(appResources.getString(R.string.test_id, test.testId));
+        for (Question question : test.questions) {
+            testContents.append(appResources.getString(R.string.line_separator, question.question));
+            for (Answer answer : question.answers)
+                testContents.append(appResources.getString(R.string.line_separator, answer.answer));
+        }
+        LinearLayout checkTestLayout = findViewById(R.id.check_test_layout);
+        TextView testContentsView = findViewById(R.id.test_contents);
+        testContentsView.setText(testContents);
+
+        findViewById(R.id.verify_test).setOnClickListener(button -> {
+            Map<String, Boolean> testUpdate = new HashMap<>();
+            testUpdate.put("isApproved", true);
+            test.isApproved = true;
+            database.collection("tests")
+                    .document(test.testId)
+                    .set(testUpdate, SetOptions.merge())
+                    .addOnSuccessListener(task ->
+                        Toast.makeText(getApplicationContext(), R.string.test_approved, Toast.LENGTH_SHORT)
+                             .show());
+            checkTestLayout.setVisibility(View.GONE);
+        });
+        findViewById(R.id.remove_test).setOnClickListener(button -> {
+            database.collection("tests")
+                    .document(test.testId)
+                    .delete()
+                    .addOnSuccessListener(task ->
+                        Toast.makeText(getApplicationContext(), R.string.test_removed, Toast.LENGTH_SHORT)
+                             .show());
+            checkTestLayout.setVisibility(View.GONE);
+        });
+        checkTestLayout.setVisibility(View.VISIBLE);
+    }
+    /*
     Отобразить сообщение внизу экрана с предложением пройти тест
      */
     void offerTest(DocumentSnapshot testSnapshot) {
@@ -189,5 +254,20 @@ public class Browse extends AppCompatActivity {
                     startActivity(testPassIntent);
                 })
                 .show();
+    }
+    /*
+    Тестировщику и модератору не нужно поле доступа к тесту по паролю. Только тестировщику должна
+    быть доступна кнопка создания нового теста
+     */
+    private void adjustLayoutFor(UserRole role) {
+        if (role == UserRole.TESTER  ||  role == UserRole.MODERATOR) {
+            findViewById(R.id.private_test_password).setVisibility(View.GONE);
+            findViewById(R.id.launch_private_test).setVisibility(View.GONE);
+        }
+        if (role == UserRole.TESTER) {
+            Intent makeTest = new Intent(getApplication(), MakeTest.class);
+            findViewById(R.id.make_test_fab).setVisibility(View.VISIBLE);
+            findViewById(R.id.make_test_fab).setOnClickListener(fab -> startActivity(makeTest));
+        }
     }
 }
