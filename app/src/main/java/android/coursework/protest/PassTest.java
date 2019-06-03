@@ -118,17 +118,15 @@ public class PassTest extends AppCompatActivity {
                     minutesElapsedSinceTestStart, secondsElapsedSinceTestStart);
                 TestResult testResult = new TestResult(
                         test.testId,
+                        test.authorId,
                         test.title,
                         currentUser.getUid(),
                         currentUser.getDisplayName(),
                         String.valueOf(testCompletionPercentage),
                         timeSpentOnTest
                         );
-                Map<String, TestResult> resultsUpdate = new HashMap<>();
-                resultsUpdate.put(currentUser.getUid(), testResult);
-                database.collection("users")
-                        .document(test.authorId)
-                        .set(resultsUpdate, SetOptions.merge())
+                database.collection("results")
+                        .add(testResult)
                         .addOnFailureListener(fail ->
                             printError(rootLayout, appResources.getString(R.string.result_upload_fail)));
             }

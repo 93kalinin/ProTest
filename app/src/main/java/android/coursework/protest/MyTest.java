@@ -109,13 +109,14 @@ class MyTest implements Serializable {
 
     static class TestResult {
 
-        String testId, testTitle, testeeId, testeeName, completionPercentage, timeSpent;
+        String testId, testerId, testTitle, testeeId, testeeName, completionPercentage, timeSpent;
 
         public TestResult() { }
 
-        TestResult(String testId, String testTitle, String testeeId, String testeeName,
+        TestResult(String testId, String testerId, String testTitle, String testeeId, String testeeName,
                    String completionPercentage, String timeSpent) {
             this.testId = testId;
+            this.testerId = testerId;
             this.testTitle = testTitle;
             this.testeeId = testeeId;
             this.testeeName = testeeName;
@@ -123,7 +124,14 @@ class MyTest implements Serializable {
             this.timeSpent = timeSpent;
         }
 
+        @Override
+        public String toString() {
+            return "Пользователь " + testeeName + " выполнил тест " + testTitle + " (ID: "
+                + testId + ") c результатом " + completionPercentage + " %, затратив " + timeSpent;
+        }
+
         public String getTestId() { return testId; }
+        public String getTesterId() { return testerId; }
         public String getTestTitle() { return testTitle; }
         public String getTesteeId() { return testeeId; }
         public String getTesteeName() { return testeeName; }

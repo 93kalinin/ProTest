@@ -39,6 +39,7 @@ import java.util.Map;
 import static android.coursework.protest.MyTest.printError;
 import static android.coursework.protest.MyTest.Question;
 import static android.coursework.protest.MyTest.Question.Answer;
+import static android.coursework.protest.MyTest.TestResult;
 import static android.coursework.protest.Authenticate.UserRole;
 
 public class Browse extends AppCompatActivity {
@@ -48,6 +49,7 @@ public class Browse extends AppCompatActivity {
     ConstraintLayout rootLayout;
     Resources appResources;
     UserRole userRole;
+    FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,7 @@ public class Browse extends AppCompatActivity {
         тестировщику - тесты, автором которых он является, модератору - все тесты
          */
         LinkedList<MyTest> testsFromDb = new LinkedList<>();
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        user = FirebaseAuth.getInstance().getCurrentUser();
         database = FirebaseFirestore.getInstance();
         database.collection("users")
                 .document("roles")
@@ -264,15 +266,40 @@ public class Browse extends AppCompatActivity {
     быть доступна кнопка создания нового теста
      */
     private void adjustLayoutFor(UserRole role) {
+        LinearLayout checkTestLayout = findViewById(R.id.check_test_layout);
         if (role == UserRole.TESTER  ||  role == UserRole.MODERATOR) {
             findViewById(R.id.private_test_password).setVisibility(View.GONE);
             findViewById(R.id.launch_private_test).setVisibility(View.GONE);
         }
         if (role == UserRole.TESTER) {
             Intent makeTest = new Intent(getApplication(), MakeTest.class);
-            List<MyTest.TestResult> testResults = new ArrayList<>();
+            findViewById(R.id.remove_test).setVisibility(View.GONE);
+            TextView testContentsView = findViewById(R.id.test_contents);
+            StringBuilder testsResults = new StringBuilder();
+
             findViewById(R.id.make_test_fab).setVisibility(View.VISIBLE);
             findViewById(R.id.make_test_fab).setOnClickListener(fab -> startActivity(makeTest));
+            findViewById(R.id.check_results).setVisibility(View.VISIBLE);
+            findViewById(R.id.check_results).setOnClickListener(button -> {
+                database.collection("results")
+                        .whereEqualTo("testerId", user.getUid())
+                        .get()
+                        .addOnSuccessListener(resultsSnapshots -> {
+                            for (DocumentSnapshot resultSnapshot : resultsSnapshots) {
+                                TestResult result = resultSnapshot.toObject(TestResult.class);
+                                testsResults.append(appResources.getString(R.string.line_separator,
+                                                    result.toString()));
+                            }
+                            testContentsView.setText(testsResults);
+                        });
+                checkTestLayout.setVisibility(View.VISIBLE);
+                rootLayout.setVisibility(View.GONE);
+            });
+            findViewById(R.id.verify_test).setOnClickListener(button -> {
+                checkTestLayout.setVisibility(View.GONE);
+                rootLayout.setVisibility(View.VISIBLE);
+                testContentsView.setText("");
+            });
         }
     }
 }
