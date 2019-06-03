@@ -16,9 +16,12 @@ import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import static android.coursework.protest.MyTest.Question.Answer;
 import static android.coursework.protest.MyTest.TestResult;
@@ -113,17 +116,19 @@ public class PassTest extends AppCompatActivity {
                     secondsElapsedSinceTestStart / SECONDS_TO_MINUTES;
                 String timeSpentOnTest = appResources.getString(R.string.time_spent,
                     minutesElapsedSinceTestStart, secondsElapsedSinceTestStart);
-                TestResult testResult = new TestResult() {{
-                    testId = test.testId;
-                    testTitle = test.title;
-                    testeeId = currentUser.getUid();
-                    testeeName = currentUser.getDisplayName();
-                    completionPercentage = String.valueOf(testCompletionPercentage);
-                    timeSpent = timeSpentOnTest;
-                }};
-                database.collection("results")
+                TestResult testResult = new TestResult(
+                        test.testId,
+                        test.title,
+                        currentUser.getUid(),
+                        currentUser.getDisplayName(),
+                        String.valueOf(testCompletionPercentage),
+                        timeSpentOnTest
+                        );
+                Map<String, TestResult> resultsUpdate = new HashMap<>();
+                resultsUpdate.put(currentUser.getUid(), testResult);
+                database.collection("users")
                         .document(test.authorId)
-                        .set(testResult)
+                        .set(resultsUpdate, SetOptions.merge())
                         .addOnFailureListener(fail ->
                             printError(rootLayout, appResources.getString(R.string.result_upload_fail)));
             }

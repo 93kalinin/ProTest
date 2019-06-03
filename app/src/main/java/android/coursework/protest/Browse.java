@@ -30,6 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -269,6 +270,7 @@ public class Browse extends AppCompatActivity {
         }
         if (role == UserRole.TESTER) {
             Intent makeTest = new Intent(getApplication(), MakeTest.class);
+            List<MyTest.TestResult> testResults = new ArrayList<>();
             findViewById(R.id.make_test_fab).setVisibility(View.VISIBLE);
             findViewById(R.id.make_test_fab).setOnClickListener(fab -> startActivity(makeTest));
         }

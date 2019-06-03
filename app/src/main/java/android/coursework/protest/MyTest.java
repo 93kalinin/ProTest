@@ -113,6 +113,16 @@ class MyTest implements Serializable {
 
         public TestResult() { }
 
+        TestResult(String testId, String testTitle, String testeeId, String testeeName,
+                   String completionPercentage, String timeSpent) {
+            this.testId = testId;
+            this.testTitle = testTitle;
+            this.testeeId = testeeId;
+            this.testeeName = testeeName;
+            this.completionPercentage = completionPercentage;
+            this.timeSpent = timeSpent;
+        }
+
         public String getTestId() { return testId; }
         public String getTestTitle() { return testTitle; }
         public String getTesteeId() { return testeeId; }
