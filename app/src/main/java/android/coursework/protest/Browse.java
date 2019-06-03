@@ -229,6 +229,7 @@ public class Browse extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), R.string.test_approved, Toast.LENGTH_SHORT)
                              .show());
             checkTestLayout.setVisibility(View.GONE);
+            rootLayout.setVisibility(View.VISIBLE);
         });
         findViewById(R.id.remove_test).setOnClickListener(button -> {
             database.collection("tests")
@@ -238,7 +239,9 @@ public class Browse extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), R.string.test_removed, Toast.LENGTH_SHORT)
                              .show());
             checkTestLayout.setVisibility(View.GONE);
+            rootLayout.setVisibility(View.VISIBLE);
         });
+        rootLayout.setVisibility(View.GONE);
         checkTestLayout.setVisibility(View.VISIBLE);
     }
     /*

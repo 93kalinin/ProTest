@@ -26,10 +26,11 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import static android.coursework.protest.MyTest.printError;
+import static android.coursework.protest.MyTest.Question;
 
 public class MakeTest extends AppCompatActivity {
 
-    GenericRecyclerAdapter<MyTest.Question> questionsAdapter;
+    GenericRecyclerAdapter<Question> questionsAdapter;
     final int CREATE_QUESTION_REQUEST_CODE = 1;
     final int DEFAULT_ACCESS_KEY = 12345;
     private ConstraintLayout rootLayout;
@@ -46,7 +47,7 @@ public class MakeTest extends AppCompatActivity {
         вопросов, созданных пользователем.
          */
         RecyclerView questionsRecycler = findViewById(R.id.questions_recycler_view);
-        questionsAdapter = new GenericRecyclerAdapter<MyTest.Question>(rootLayout) {
+        questionsAdapter = new GenericRecyclerAdapter<Question>(rootLayout) {
             @Override
             public void onBindViewHolder(GenericRecyclerAdapter.ViewHolder holder, int position) {
                 String question = collection.get(position).getQuestion();
@@ -148,18 +149,18 @@ public class MakeTest extends AppCompatActivity {
             else {
                 int newAccessKey = testIsPrivateSwitch.isChecked() ?
                     questionsAdapter.collection.hashCode() : DEFAULT_ACCESS_KEY;
-                MyTest newTest = new MyTest() {{
-                    questions = new ArrayList<>(questionsAdapter.collection);
-                    creationTime = new Date();
-                    isPrivate = testIsPrivateSwitch.isChecked();
-                    hideResult = hideResultSwitch.isChecked();
-                    accessKey = newAccessKey;
-                    title = titleInput.getText().toString().trim();
-                    description = descriptionInput.getText().toString().trim();
-                    tags = selectedTags;
-                    authorNickname = currentUser.getDisplayName();
-                    authorId = currentUser.getUid();
-                }};
+                MyTest newTest = new MyTest(
+                    new ArrayList<>(questionsAdapter.collection),
+                    new Date(),
+                    testIsPrivateSwitch.isChecked(),
+                    hideResultSwitch.isChecked(),
+                    newAccessKey,
+                    titleInput.getText().toString().trim(),
+                    descriptionInput.getText().toString().trim(),
+                    selectedTags,
+                    currentUser.getDisplayName(),
+                    currentUser.getUid()
+                );
 
                 database.collection("tests")
                     .add(newTest)
@@ -200,7 +201,7 @@ public class MakeTest extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == CREATE_QUESTION_REQUEST_CODE  &&  resultCode == RESULT_OK) {
-            MyTest.Question question = (MyTest.Question) intent.getExtras().getSerializable("question");
+            Question question = (Question) intent.getExtras().getSerializable("question");
             questionsAdapter.addItem(question);
         }
     }

@@ -6,6 +6,7 @@ import android.support.design.widget.Snackbar;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /*
@@ -32,10 +33,26 @@ class MyTest implements Serializable {
     @Override
     public String toString() { return title; }
 
+    MyTest(ArrayList<Question> questions, Date creationTime, boolean isPrivate, boolean hideResult,
+           int accessKey, String title, String description, ArrayList<String> tags,
+           String authorNickname, String authorId) {
+        this.questions = questions;
+        this.creationTime = creationTime;
+        this.isPrivate = isPrivate;
+        this.hideResult = hideResult;
+        this.accessKey = accessKey;
+        this.title = title;
+        this.description = description;
+        this.tags = tags;
+        this.authorNickname = authorNickname;
+        this.authorId = authorId;
+    }
+
     public ArrayList<Question> getQuestions() { return questions; }
     public Date getCreationTime() { return creationTime; }
     public boolean getIsPrivate() { return isPrivate; }
     public boolean getHideResult() { return hideResult; }
+    public boolean getIsApproved() { return isApproved; }
     public int getAccessKey() { return accessKey; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
