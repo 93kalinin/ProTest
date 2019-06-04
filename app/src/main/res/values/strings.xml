@@ -74,7 +74,7 @@
     <string name="test_not_found">Не удалось найти тест</string>
     <string name="test_passed">%1$d верных ответов из %2$d возможных</string>
     <string name="test_result">Тест пройден</string>
-    <string name="test_complete">Прохождение теста завершено, но тестировщик отключил отображение результатов. Результат был отправлен тестировщику.</string>
+    <string name="test_complete">Прохождение теста завершено, но тестировщик отключил отображение результатов</string>
     <string name="time_spent">%1$d мин. %2$d сек.</string>
     <string name="result_upload_fail">Не удалось отправить результат тестирования тестировщику</string>
     <string name="email_error">Некоррекнтый адрес электронной почты</string>
@@ -90,4 +90,5 @@
     <string name="line_separator">%1$s\n</string>
     <string name="test_approved">Тест одобрен</string>
     <string name="test_removed">Тест удален</string>
+    <string name="result_sent">Результат отправлен тестировщику</string>
 </resources>

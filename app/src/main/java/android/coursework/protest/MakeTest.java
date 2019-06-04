@@ -171,7 +171,7 @@ public class MakeTest extends AppCompatActivity {
                             appResources.getString(R.string.new_test_id_and_key, newTestId, newAccessKey)
                             : appResources.getString(R.string.new_test_id, newTestId);
                         dialog.setTitle(R.string.test_added)
-                              .setNeutralButton(R.string.ok, (dialog_, id) -> dialog_.cancel())
+                              .setNeutralButton(R.string.ok, (dialog_, id) -> finish())
                               .setMessage(dialogMessage)
                               .setCancelable(true)
                               .create()

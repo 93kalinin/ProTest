@@ -126,7 +126,7 @@ class MyTest implements Serializable {
 
         @Override
         public String toString() {
-            return "Пользователь " + testeeName + " выполнил тест " + testTitle + " (ID: "
+            return "• Пользователь " + testeeName + " выполнил тест " + testTitle + " (ID: "
                 + testId + ") c результатом " + completionPercentage + " %, затратив " + timeSpent;
         }
 

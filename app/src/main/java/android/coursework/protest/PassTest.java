@@ -12,6 +12,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -127,6 +128,11 @@ public class PassTest extends AppCompatActivity {
                         );
                 database.collection("results")
                         .add(testResult)
+                        .addOnSuccessListener(listener -> {
+                            Toast.makeText(getApplicationContext(),
+                                    appResources.getString(R.string.result_sent), Toast.LENGTH_SHORT)
+                                 .show();
+                        })
                         .addOnFailureListener(fail ->
                             printError(rootLayout, appResources.getString(R.string.result_upload_fail)));
             }
